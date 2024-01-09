@@ -1,0 +1,125 @@
+﻿@{
+    ViewBag.Title = "About";
+}
+<style>
+    .Center-Container {
+        position: relative;
+        height: 100%;
+    }
+
+    .Absolute-Center {
+        width: 90%;
+        height: 50%;
+        overflow: auto;
+        margin: auto;
+        /*position: absolute;*/
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+    }
+
+    .tdDate {
+        text-align: right;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+        font-size: xx-large;
+    }
+
+    td {
+        width: 300px;
+    }
+
+    .tdHeader {
+        font-style: oblique;
+        color: white;
+        background-color: #007bff !important;
+    }
+
+    .steps {
+        text-indent: 40px;
+    }
+</style>
+
+<div class="featured" id="Center-Container">
+    <div class="jumbotron Absolute-Center">
+        <div class="Center-Container">
+            @*<div class="Absolute-Center">*@
+            <h1><u>3 ways of updating data in KPI Metrics system.<br /></u></h1>
+            <p>
+                <h2>1. Click [Edit] button to update line by line.<br /></h2>
+                <h2>2. Click month link to pop up only such month’s records for update line by line.<br /></h2>
+                <h2>3. Click [Prepare RFx] button to get system to update RFx according to rules already set within the system.<br /></h2>
+            </p>
+            <div class="steps">
+                <h2>&bull; RF1 = copy Oct to Nov from ACT, copy Dec to Sep from BGT.<br /></h2>
+                <h2>&bull; RF2 = copy Oct to Feb from ACT, copy Mar to Sep from RF1.<br /></h2>
+                <h2>&bull; RF3 = copy Oct to May from ACT, copy Jun to Sep from RF2.<br /> <br /></h2>
+            </div>
+            <h2>   Users are limited to update whichever Data via the system.<br /></h2>
+            <h2>   For example: During 1-Jun-2022 to 21-Aug-2022 user can update RF3 data of Jun-2022 to Sep-2022.<br /></h2>
+            <h2>   Table below fyi.<br /></h2>
+            <table>
+                <tr class="trHeader">
+                    <td class="tdHeader">FinYear</td>
+                    <td class="tdHeader">Model</td>
+                    <td class="tdHeader">StartDate</td>
+                    <td class="tdHeader">EndDate</td>
+                    <td class="tdHeader">RecordStartDate</td>
+                    <td class="tdHeader">RecordEndDate</td>
+                </tr>
+                <tr>
+                    <td>2021-22</td>
+                    <td>BGT</td>
+                    <td class="tdDate">1-Jul-2021</td>
+                    <td class="tdDate">30-Sep-2021</td>
+                    <td class="tdDate">1-Oct-2021</td>
+                    <td class="tdDate">30-Sep-2022</td>
+                </tr>
+                <tr>
+                    <td>2021-22</td>
+                    <td>ACT</td>
+                    <td class="tdDate">1-Oct-2021</td>
+                    <td class="tdDate">31-Oct-2022</td>
+                    <td class="tdDate">1-Oct-2021</td>
+                    <td class="tdDate">30-Sep-2022</td>
+                </tr>
+                <tr>
+                    <td>2021-22</td>
+                    <td>RF1</td>
+                    <td class="tdDate">1-Dec-2021</td>
+                    <td class="tdDate">31-Jan-2022</td>
+                    <td class="tdDate">1-Dec-2021</td>
+                    <td class="tdDate">30-Sep-2022</td>
+                </tr>
+                <tr>
+                    <td>2021-22</td>
+                    <td>RF2</td>
+                    <td class="tdDate">1-Mar-2022</td>
+                    <td class="tdDate">31-May-2022</td>
+                    <td class="tdDate">1-Mar-2022</td>
+                    <td class="tdDate">30-Sep-2022</td>
+                </tr>
+                <tr>
+                    <td>2021-22</td>
+                    <td>RF3</td>
+                    <td class="tdDate">1-Jun-2022</td>
+                    <td class="tdDate">31-Aug-2022</td>
+                    <td class="tdDate">1-Jun-2022</td>
+                    <td class="tdDate">30-Sep-2022</td>
+                </tr>
+            </table>
+            @*</div>*@
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#navlogout").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+    });
+</script>
+
+

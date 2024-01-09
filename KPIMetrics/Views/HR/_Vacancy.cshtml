@@ -1,0 +1,350 @@
+﻿
+@model KPIMetrics.Models.StaffClass
+@{
+    ViewBag.Title = "Index";
+}
+
+<style type="text/css">
+    .fontlabel {
+        color: #4a729f;
+        font-weight: 1000;
+    }
+
+    .modal {
+        align-content: center;
+        vertical-align: middle;
+        height: 100%;
+        float: left;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    #myModalContent2 {
+        width: 1500px !important;
+        margin: auto;
+    }
+
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    th.yellowHeader {
+        background-color: yellow;
+    }
+
+    #grid2 > .k-grid-content {
+        overflow-x: scroll;
+        overflow-y: scroll;
+        max-height: 300px !important;
+    }
+</style>
+<div>
+    <div id="grid2"></div>
+    <label id="lblisNew" hidden="hidden"></label>
+    <div>
+        <a href="javascript:void(0)" class="btn btn-danger" style="float:right" onclick="closeEdit();">Close</a>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#loader").css("display", "");
+        $("#navHR").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        dataSource2 = new kendo.data.DataSource({
+           /* pageSize: 6,*/
+            transport: {
+                read: {
+                    url: "VacancyList",
+                    dataType: "json"
+                },
+                update: {
+                    url: "VacancyUpdate",
+                    dataType: "json",
+                    type: "POST",
+                    complete: function (e) {
+                        $("#grid").data("kendoGrid").dataSource.read();
+                        $("#grid2").data("kendoGrid").dataSource.read();
+                    }
+                },
+                create: {
+                    url: "VacancyAdd",
+                    dataType: "json",
+                    type: "POST",
+                    complete: function (e) {
+                        $("#grid").data("kendoGrid").dataSource.read();
+                        $("#grid2").data("kendoGrid").dataSource.read();
+                    }
+                },
+                destroy: {
+                    url: "VacancyDelete",
+                    dataType: "json",
+                    type: "POST",
+                    complete: function (e) {
+                        $("#grid").data("kendoGrid").dataSource.read();
+                        $("#grid2").data("kendoGrid").dataSource.read();
+                    }
+                },
+                parameterMap: function (data, operation) {
+                    if (operation !== "read" && data.models) {
+                        return {
+                            staff: data.models[0]
+                        };
+                    }
+                }
+            },
+            batch: true,
+            error: function (e) {
+
+                var msg = e.xhr.responseText; // responseText is the custom error message which is being sent from the server side code
+
+                // Show the message to user
+                alert(msg);
+            },
+            requestEnd: function (e) {
+                //check the "response" argument to skip the local operations
+                if (e.type === "create" && e.response) {
+                    e.sender.read(); // refresh data source to get record ID
+                    // console.log("Record Created");
+                } else {
+                    // console.log("Not create event")
+                    //if (e.response) {
+                    //    $("#grid2").data("kendoGrid").dataSource.read();
+                    //    $("#grid2").data("kendoGrid").refresh();
+                    //}
+                }
+            },
+            schema: {
+                model: {
+                    id: "ID",
+                    fields: {
+                        ID: { editable: false },
+                        emp_no: {
+                            editable: true,
+                            validation: {
+                                //required: true,
+                                emp_novalidation: function (input) {
+                                    var empno = $(input).closest("tr").find("input[name='emp_no']").val();
+                                    var isNew = $('#lblisNew').text();
+                                    var isValid = "true";
+
+                                    if (input.is("[name='emp_no']") && input.val() == "") {
+                                        input.attr("data-emp_novalidation-msg", "Vacancy Code/Name/ToBe_Emp_no is required.");
+                                        return false;
+                                    }
+
+                                    if (input.is("[name='emp_no']") && input.val() != "") {
+                                        $.ajax({
+                                            url: "CheckDuplication",
+                                            async: false,
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: {
+                                                empno: empno,
+                                                isNew: isNew
+                                            },
+                                            success: function (result) {
+                                                $(".k-textbox").removeClass("k-invalid");
+                                                $("#emp_no-error").remove();
+                                                if (result == "FALSE") {
+                                                    isValid = result;
+                                                    return false;
+                                                }                                                
+                                            },
+                                            error: function () {
+                                                return false;
+                                            }
+                                        });
+
+                                        if (isValid == "FALSE") {
+                                            input.attr("data-emp_novalidation-msg", "Entered values have a duplicate record in StaffList table.");
+                                            return false;
+                                        }
+                                    }
+
+                                    return true;
+                                }
+                            }
+                        },
+                        Title: { editable: true, },
+                        Dept_Desc: { editable: true, },
+                        Division: { editable: true, },
+                        UpdatedBy: { editable: false },
+                        UpdatedDT: { editable: false, type: "datetime", parse: customParser },
+                        CreatedBy: { editable: false },
+                        CreatedDT: { editable: false, type: "datetime", parse: customParser },
+                    }
+                }
+            }
+        });
+      
+        function customParser(data) {
+            if (data == null) {
+                return null;
+            }
+            else {
+                return new Date(parseInt(data.substring(6))).format("dd-mmm-yyyy")
+            }
+        }
+
+
+        function initLists() {
+            $("#Title").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetTitleList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Dept_Desc").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetDept_DescList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Division").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetDivList"
+                    }
+                },
+                filter: "contains",
+            });           
+        };
+
+        //dataSource.group({ field: "Headcount" });
+        var dsSort = [];
+        dsSort.push(
+            { field: "emp_no", dir: "asc" }
+        );
+        dataSource2.sort(dsSort);
+
+        $("#grid2").kendoGrid({
+            dataSource: dataSource2,
+            columnMenu: {
+                filterable: true
+            },
+            scrollable: true,
+            editable: false,
+            sortable: true,
+            navigatable: true,
+            resizable: true,
+            reorderable: true,
+            groupable: true,
+            filterable: true,
+            //pageable: {
+            //    pageSizes: [50, 100, 150, "all"],
+            //    /* numeric: false,*/
+            //    position: "top",
+            //},
+            columnMenu: true,
+            //autobind: false,
+            //async: false,
+            toolbar: ["excel", "create",
+                /*  { template: '<a class="k-button" href="javascript:void(0)" onclick="create()"><i style="font-size: 18px;" class="k-icon k-i-plus"></i>Add Vacancy</a>' },*/
+                "search"],
+            search: {
+                fields: ["emp_no", "Title", "Dept_Desc", "Division"],
+            },
+            filterable: true,
+            columns: [
+                { field: "ID", hidden: true },
+                { field: "emp_no", title: "ToBe_Emp_no", filterable: { multi: true, search: true }, width: 130 },
+                { field: "Title", title: "Title", filterable: { multi: true, search: true }, width: 150 },
+                { field: "Dept_Desc", title: "Department", filterable: { multi: true, search: true }, width: 200 },
+                { field: "Division", title: "Division", filterable: { multi: true, search: true }, width: 150 },
+                {
+                    command: ["edit", "destroy"], width: 210
+                }
+            ],
+            editable: { mode: "inline", destroy: true },
+            beforeEdit: function (e) {
+                var data = e.model;
+                var isNew = e.model.isNew();
+                $('#lblisNew').text(isNew);
+            },
+            edit: function (e) {
+                initLists();
+                $(e.container).find("input[name=emp_no]").attr("maxlength", 10);
+                $(e.container).find("input[name=Title]").attr("maxlength", 100);
+                $(e.container).find("input[name=Dept_Desc]").attr("maxlength", 30);
+                $(e.container).find("input[name=Division]").attr("maxlength", 128);
+            },
+        });
+
+        $(".k-grid").on("mousedown", ".k-grid-header th", function (e) {
+            // prevent sorting/filtering for the current Grid only
+            var grid = $(this).closest(".k-grid");
+            var editRow = grid.find(".k-grid-edit-row");
+
+            // prevent sorting/filtering while any Grid is being edited
+            //var editRow = $(".k-grid-edit-row");
+
+            if (editRow.length > 0) {
+                alert("Please complete the editing operation before sorting or filtering");
+                e.preventDefault();
+            }
+        });
+    });
+
+    $("#grid2").kendoTooltip({
+        show: function (e) {
+            if (this.content.text().length == 0) {
+                this.content.parent().css("visibility", "hidden");
+            }
+            else {
+                this.content.parent().css("visibility", "visible");
+            }
+        },
+        filter: "th",
+        content: function (e) {
+            var target = e.target;
+            return target.text();
+        },
+        width: 150
+    }).data("kendoTooltip");
+
+    function create() {
+        $("input:text").val('');
+
+        $("#myModalCreate").modal("show");
+        $("#myModalVacancy").modal("hide");
+    }
+    function closeEdit() {
+        $("#myModalVacancy").modal("hide");
+    }
+
+</script>
+
+

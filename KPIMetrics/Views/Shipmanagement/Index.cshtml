@@ -1,0 +1,778 @@
+﻿@model KPIMetrics.Models.KPIClass
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style type="text/css">
+    .fontlabel {
+        color: #4a729f;
+        font-weight: 1000;
+    }
+
+    #lblCustomer, #lblMonth {
+        color: mediumblue;
+    }
+
+    .modal {
+        align-content: center;
+        vertical-align: middle;
+        height: 100%;
+        float: left;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    #myModalEdit {
+        width: 1500px !important;
+    }
+
+    #myModalContent2 {
+        width: 1500px !important;
+        margin: auto;
+    }
+
+    /*   @@media screen and (min-width: 768px) {
+        .modal:before {
+            display: inline-block;
+            vertical-align: middle;
+            content: " ";
+            height: 100%;
+        }
+    }*/
+
+    #modalDialog2 {
+        display: inline-block;
+        vertical-align: middle;
+        text-align: left;
+    }
+</style>
+<div>
+    <table id="shipmanagement" style="width:auto">
+        <tr>
+            <td style="width: 10%; vertical-align: top">
+                <label class="form-label fontlabel">Business Function</label>
+            </td>
+            <td style="width: 25%; vertical-align: top">
+                <label>Shipmanagement</label>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 10%; vertical-align: top">
+                <label class="form-label fontlabel">Metric Name</label>
+            </td>
+            <td style="width: 25%; vertical-align: top">
+                <span id="lblLOB">@ViewBag.KPI</span>
+            </td>
+        </tr>
+
+        @*<tr>
+                <td style="width: 10%; vertical-align: top">
+                    <label class="form-label fontlabel">KPI</label>
+                </td>
+                <td style="width: 10%; vertical-align: top">
+                    <label>@ViewBag.KPI</label>
+                </td>
+            </tr>*@
+    </table>
+    <div id="grid"></div>
+    <label class="hidden" id="lblFinYear"></label>
+    <label class="hidden" id="lblCalMonth"></label>
+    <label class="hidden" id="lblCalYear"></label>
+    @*<label class="hidden" id="lblRF1"></label>
+        <label class="hidden" id="lblRF2"></label>
+        <label class="hidden" id="lblRF3"></label>*@
+    <div id="myModalCreate" class="modal fade in" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div id="myModalContent" class="modal-content panel-info" style="display:table; padding:20px;">
+                @Html.Partial("_Create")
+            </div>
+        </div>
+    </div>
+    <div id="myModalEdit" class="modal fade in" role="dialog" aria-hidden="true">
+        <div id="modalDialog2" class="modal-dialog modal-lg">
+            <div id="myModalContent2" class="modal-content panel-info" style="display: table; padding: 20px;">
+                @Html.Partial("_Edit")
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var savedFilters = [];
+    $(document).ready(function () {
+        $("#loaderNew").css("display", "");
+        setTimeout(function () {
+            var isHidden = false;
+            var isLOBHidden = false;
+          
+            $("#navShipmanagement").addClass("k-link k-state-selected");
+            $("#bgmodal").css("display", "none");
+            dataSource = new kendo.data.DataSource({
+                pageSize: 100,
+                transport: {
+                    read: {
+                        url: "Shipmanagement/List",
+                        dataType: "json"
+                    },
+                    update: {
+                        url: "Shipmanagement/Update",
+                        dataType: "json",
+                        type: "POST",
+                    },
+                    parameterMap: function (data, operation) {
+                        if (operation !== "read" && data.models) {
+                            return {
+                                kpi: data.models[0]
+                            };
+                        }
+                    }
+                },
+                batch: true,
+                error: function (e) {
+                    var msg = e.xhr.responseText; // responseText is the custom error message which is being sent from the server side code
+                    // Show the message to user
+                    alert(msg);
+                },
+                schema: {
+                    model: {
+                        id: "Id",
+                        fields: {
+                            Id: { editable: false, type: "int", nullable: false },
+                            SetId: { editable: false },
+                            LOB: { editable: false },
+                            KPI1: { editable: false },
+                            KPI2: { editable: false },
+                            KPI3: { editable: false },
+                            //KPI4: { editable: false },
+                            CalYear: { editable: false },
+                            CalMonth: { editable: false },
+                            CalMonth2: { editable: false, type: "date" },
+                            FinYear: { editable: false },
+                            Model: { editable: false },
+                            BGT: { type: "number" },
+                            ACT: { type: "number" },
+                            RF1: { type: "number" },
+                            RF2: { type: "number" },
+                            RF3: { type: "number" },
+                            //CreatedDt: { editable: false, type: "date", parse: customParser },
+                            /*UpdatedBy: { editable: false }*/
+                        }
+                    }
+                }
+            });
+
+
+            function customParserMonth(data) {
+                if (data == null) {
+                    return null;
+                }
+                else {
+                    return new Date(parseInt(data.substring(6))).format("mmm")
+                }
+            }
+
+            var dsSort = [];
+            dsSort.push(
+                { field: "KPI2", dir: "asc" },
+                { field: "CalYear", dir: "desc" },
+                { field: "CalMonth2", dir: "desc" }
+            );
+            dataSource.sort(dsSort);
+
+            $("#grid").kendoGrid({
+                dataSource: dataSource,
+                columnMenu: {
+                    filterable: true
+                },
+                scrollable: true,
+                editable: false,
+                sortable: true,
+                navigatable: true,
+                resizable: true,
+                reorderable: true,
+                groupable: true,
+                //filter: onFilter,
+                filterable: true,
+                pageable: {
+                    pageSizes: [50, 100, 150, "all"],
+                   /* numeric: false,*/
+                    position: "top",
+                },
+                columnMenu: true,
+                //autobind: false,
+                //async: false,
+                toolbar: [{ template: '<a class="k-button" href="javascript:void(0)" onclick="create()"><i style="font-size: 18px;" class="k-icon k-i-plus"></i>Add ' + "@ViewBag.KPI" + '</a>' },
+                    //{ template: '<a class="k-button" href="javascript:void(0)" onclick="editByCustomer()" id="btnByCustomer"><i style="font-size: 18px;" class="k-icon k-i-edit"></i>Edit by Customer</a>' },
+                    "excel",
+                    { template: '<input type="checkbox" id="chkShow" onclick="showFiscalYearOnly()">Show records for the current fiscal year only.</input>' },
+                    { template: '<input type="checkbox" id="chkZero">Prepare RF figures for 0 only.</input>' },
+                    { template: '<input type="button" id="btnRF1" onclick="editAll(\'RF1\')" value="Prepare RF1" disabled />' },
+                    { template: '<input type="button" id="btnRF2" onclick="editAll(\'RF2\')" value="Prepare RF2" disabled />' },
+                    { template: '<input type="button" id="btnRF3" onclick="editAll(\'RF3\')" value="Prepare RF3" disabled />' },
+                    { template: '<input type="button" id="btnACT" onclick="editAll(\'ACT\')" value="Update ACT" />' },
+                    "search"],
+                search: {
+                    fields: ["KPI1", "KPI2", "CalMonth", "CalYear", "Model", "UpdatedDT", "UpdatedBy", "ACT","BGT", "RF1","RF2","RF3"]
+                },
+                columns: [
+                    { field: "LOB", title: "Line Function", filterable: { multi: true, search: true }, width: 150, locked: true },
+                    { field: "KPI1", title: "@Model.KPI1", filterable: { search: true }, width: 250, locked: true },
+                    { field: "KPI2", title: "@Model.KPI2", filterable: { multi: true, search: true }, width: 200, locked: true },
+                    //{ field: "KPI3", title: "@Model.KPI3", hidden: isHidden, filterable: { multi: true, search: true }, width: 150, locked: true },
+                    //{ field: "KPI4", title: "@Model.KPI4", hidden: isHidden, filterable: { multi: true, search: true }, width: 120, locked: true },
+                    { field: "CalYear", title: "Year", filterable: { multi: true, search: true }, width: 80, locked: true },
+                    { field: "CalMonth2", title: "Month", format: "{0: MMM-yyyy}", template: '<a href="javascript: void(0)" id="lblMonth" class="calMonth">#=CalMonth#</a>', filterable: { multi: true, search: true }, width: 80, locked: true},
+                    { field: "FinYear", title: "FinYear", filterable: { multi: true, search: true }, width: 100, locked: true },
+                    { field: "ACT", title: "ACT", editable: isACTEditable, filterable: { multi: true, search: true }, width: 120, attributes: { style: "text-align:right" }, format: "{0:N2}", locked: false },
+                    { field: "BGT", title: "BGT", editable: isBGTEditable, filterable: { multi: true, search: true }, width: 120, attributes: { style: "text-align:right" }, format: "{0:N2}", locked: false },
+                    { field: "RF1", title: "RF1", editable: isRF1Editable, filterable: { multi: true, search: true }, width: 120, attributes: { style: "text-align:right" }, format: "{0:N2}", locked: false },
+                    { field: "RF2", title: "RF2", editable: isRF2Editable, filterable: { multi: true, search: true }, width: 120, attributes: { style: "text-align:right" }, format: "{0:N2}", locked: false },
+                    { field: "RF3", title: "RF3", editable: isRF3Editable, filterable: { multi: true, search: true }, width: 120, attributes: { style: "text-align:right" }, format: "{0:N2}", locked: false },
+                    //{ field: "CreatedDt", title: "Updated Date", hidden: true, filterable: { multi: true, search: true }, width: "15%" },
+                    //{ field: "UpdatedBy", title: "Updated By", hidden: true, filterable: { multi: true, search: true }, width: "15%" },
+                    {
+                        command: [{
+                            name: "edit", visible: function (dataItem) {
+                                $.ajax({
+                                    async: false,
+                                    url: "Shipmanagement/IsEditable",
+                                    type: 'POST',
+                                    data: {
+                                        model: '',
+                                        finYear: dataItem.FinYear,
+                                        calMonth: dataItem.CalMonth,
+                                        calYear: dataItem.CalYear
+                                    },
+                                    success: function (data) {
+                                        result = data;
+                                    },
+                                    error: function (xhr, status) {
+                                        alert(status);
+                                    }
+                                });
+
+                                return result == "True";
+                            },
+                        }], width: 130, locked: true
+                    }
+                ],
+                editable: { mode: "inline", destroy: false },
+                beforeEdit: function (e) {
+                    var data = e.model;
+                    $('#lblFinYear').val(data.FinYear);
+                    $('#lblCalMonth').val(data.CalMonth);
+                    $('#lblCalYear').val(data.CalYear);
+                    //    $('#lblRF1').text(data.RF1);
+                    //    $('#lblRF2').text(data.RF2);
+                    //    $('#lblRF3').text(data.RF3);
+                }
+            });
+
+            $(".k-grid").on("mousedown", ".k-grid-header th", function (e) {
+                // prevent sorting/filtering for the current Grid only
+                var grid = $(this).closest(".k-grid");
+                var editRow = grid.find(".k-grid-edit-row");
+
+                // prevent sorting/filtering while any Grid is being edited
+                //var editRow = $(".k-grid-edit-row");
+
+                if (editRow.length > 0) {
+                    alert("Please complete the editing operation before sorting or filtering");
+                    e.preventDefault();
+                }
+            });
+            $("#chkShow").prop("checked", true);
+            $("#chkZero").prop("checked", true);           
+
+            $(".k-grid-search").on("input", function (e) {
+                $("#chkShow").prop("checked", false);
+                $("#chkShow").attr("disabled", true);
+                let inputValueLength = e.target.value.length;
+
+                // Check if there are any saved filters and if the input has been cleared.
+                //if (savedFilters && inputValueLength == 0) {
+                //    $("#chkShow").prop("checked", true);
+                //    let grid = $("#grid").data("kendoGrid");
+                //    setTimeout(function () {
+                //        // Apply the saved filters after the input has been cleared.
+                //        grid.dataSource.filter(savedFilters);
+                //    }, 310);
+                //}
+
+                if (inputValueLength == 0) {
+                     $("#chkShow").prop("checked", true);
+                     $("#chkShow").removeAttr("disabled");
+                      showFiscalYearOnly();
+                }
+            });
+
+            getCurrentFiscalYear();
+            checkEditAll();
+                $("#loaderNew").css("display", "none");
+        }, 300);
+    });
+
+  
+    function customParser(data) {
+        if (data == null) {
+            return null;
+        }
+        else {
+            return new Date(parseInt(data.substring(6)));
+        }
+    }
+
+    function editAll(model) {
+        //var grid = $("#grid").getKendoGrid();
+        //var calMonth = grid.dataItem($(e.currentTarget).closest("tr")).CalMonth;
+        //var calYear = grid.dataItem($(e.currentTarget).closest("tr")).CalYear;
+        //var finYear = grid.dataItem($(e.currentTarget).closest("tr")).FinYear;
+        //var model = $(e.currentTarget).closest("td").attr("data-container-for");
+        var isRFZeroOnly = $('#chkZero').is(':checked');       
+
+        kendo.confirm("Do you want to overwrite existing figures for " + model + "?")
+            .done(function () {
+                console.log('YES');
+                $("#loaderNew").css("display", "");
+
+                $.ajax({
+                    async: true,
+                    url: "Shipmanagement/EditExisting",
+                    type: 'POST',
+                    data: {
+                        model: model,
+                        isRFZeroOnly: isRFZeroOnly
+                    },
+                    success: function (result) {
+                        if (result == "True") {
+                            console.log('TRUE');
+                            //setTimeout(function () {
+                            $("#grid").data("kendoGrid").dataSource.read();
+                            $("#grid").data("kendoGrid").refresh();
+                            $("#loaderNew").css("display", "none");
+                            //}, 3000);
+                            console.log('end');
+                        }
+                    },
+                    error: function (xhr, status) {
+                        alert(status);
+                    }
+                });
+            }).fail(function () {
+                //do nothing          
+            });
+    };
+
+    function checkEditAll() {
+        $.ajax({
+            url: "Shipmanagement/CheckEditAll",
+            type: 'POST',
+            async: false,
+            success: function (data) {
+
+                $.each(data, function (i, rf) {
+                    switch (rf) {
+                        case 'RF1':
+                            $("#btnRF1").removeAttr("disabled");
+                            break;
+                        case 'RF2':
+                            $("#btnRF2").removeAttr("disabled");
+                            break;
+                        case 'RF3':
+                            $("#btnRF3").removeAttr("disabled");
+                            break;
+                        default:
+
+                    }
+                });
+
+            },
+            error: function (xhr, status) {
+                alert(status);
+            }
+        })
+    }
+
+    function getCurrentFiscalYear() {
+        $.ajax({
+            url: "Shipmanagement/GetCurrentFiscalYear",
+            type: 'POST',
+            async: false,
+            success: function (data) {
+                var grid = $("#grid").data("kendoGrid");
+                grid.dataSource.filter({ field: "FinYear", value: data });
+
+            },
+            error: function (xhr, status) {
+                alert(status);
+            }
+        })
+    }
+
+   function showFiscalYearOnly() {
+       $("#loaderNew").css("display", "");
+       setTimeout(function () {
+
+           var grid = $("#grid").data("kendoGrid");
+
+           if ($("#chkShow").is(":checked")) {
+               getCurrentFiscalYear();
+           }
+           else {
+               grid.dataSource.filter({});
+           }
+           grid.dataSource.read();
+           grid.setDataSource(grid.dataSource);
+           var dsSort = [];
+           dsSort.push(
+               { field: "KPI2", dir: "asc" },
+               { field: "CalYear", dir: "desc" },
+               { field: "CalMonth2", dir: "desc" }
+           );
+           dataSource.sort(dsSort);
+           $("#loaderNew").css("display", "none");
+       }, 500);
+
+        /*   $("#loader").css("display", "none");*/
+    };
+
+    $("#grid").kendoTooltip({
+        show: function (e) {
+            if (this.content.text().length == 0) {
+                this.content.parent().css("visibility", "hidden");
+            }
+            else {
+                this.content.parent().css("visibility", "visible");
+            }
+        },
+        filter: "th",
+        content: function (e) {
+            var target = e.target;
+            return target.text();
+        },
+        width: 150
+    }).data("kendoTooltip");
+
+    $("#grid").on("click", "a.customer", function (e) {
+        var grid = $("#grid").getKendoGrid();
+        var customer = grid.dataItem($(e.currentTarget).closest("tr")).KPI2;
+        var shipname = grid.dataItem($(e.currentTarget).closest("tr")).KPI3;
+        var calMonth = grid.dataItem($(e.currentTarget).closest("tr")).CalMonth;
+        var calYear = grid.dataItem($(e.currentTarget).closest("tr")).CalYear;
+
+        getResult(customer, shipname, calMonth, calYear, 'GetCustomerRec');
+    });
+
+    $("#grid").on("click", "a.calMonth", function (e) {
+        var grid = $("#grid").getKendoGrid();
+        var calMonth = grid.dataItem($(e.currentTarget).closest("tr")).CalMonth;
+        var calYear = grid.dataItem($(e.currentTarget).closest("tr")).CalYear;
+
+        getResult("", "", calMonth, calYear, 'GetMonthYearRec');
+    });
+
+    function getResult(customer, shipname, calMonth, calYear, action) {
+        var isHidden = false;
+        var isLOBHidden = false;
+
+        $.ajax({
+            url: "Shipmanagement/" + action,
+            type: 'POST',
+            async: false,
+            data: {
+                customer: customer,
+                shipname: shipname,
+                calMonth: calMonth,
+                calYear: calYear
+            },
+            success: function (data) {
+
+                var dataSource = new kendo.data.DataSource({
+                    data: data,
+                    pageSize: 100,
+                    batch: true,
+                    schema: {
+                        model: {
+                            id: "KPI2",
+                            fields: {
+                                SetId: { editable: false },
+                                LOB: { editable: false },
+                                KPI2: { editable: false },
+                                KPI3: { editable: false },
+                                KPI1: { editable: false },
+                                //KPI4: { editable: false },
+                                CalYear: { editable: false },
+                                CalMonth: { editable: false },
+                                CalMonth2: { editable: false, type: "date" },
+                                FinYear: { editable: false },
+                                BGT: { type: "number" },
+                                ACT: { type: "number" },
+                                RF1: { type: "number" },
+                                RF2: { type: "number" },
+                                RF3: { type: "number" },
+                            }
+                        }
+                    }
+                });
+
+                var dsSort = [];
+                dsSort.push(
+                    { field: "CalYear", dir: "desc" },
+                    { field: "CalMonth2", dir: "desc"}
+                );
+                dataSource.sort(dsSort);
+
+                $("#grid2").kendoGrid({
+                    dataSource: dataSource,
+                    columnMenu: {
+                        filterable: true
+                    },
+                    editable: false,
+                    sortable: true,
+                    navigatable: true,
+                    resizable: true,
+                    reorderable: true,
+                    groupable: true,
+                    //filter: onFilter,
+                    filterable: true,
+                    pageable: true,
+                    autobind: false,
+                    async: false,
+                    pageable: {
+                        position: "top",
+                    },
+                    toolbar: [{
+                        template: '<a class="k-button" href="javascript:void(0)" onclick="saveChanges()"><i style="font-size: 18px;" class="k-icon k-i-check"></i>Save changes</a>'}, "search"],
+                    search: {
+                        fields: ["KPI1", "KPI2", "CalMonth", "CalYear", "Model", "UpdatedDT", "UpdatedBy", "ACT", "BGT", "RF1", "RF2", "RF3"]
+                    },
+                    columns: [
+                        { field: "LOB", title: "Line Function", filterable: { multi: true, search: true }, width: "13%", },
+                        { field: "KPI1", title: "@Model.KPI1", filterable: { multi: true, search: true }, width: "13%", },
+                        { field: "KPI2", title: "@Model.KPI2", filterable: { multi: true, search: true }, width: "13%", },
+                        //{ field: "KPI3", title: "@Model.KPI3", hidden: isHidden, filterable: { multi: true, search: true }, width: "10%", },
+                        //{ field: "KPI4", title: "@Model.KPI4", hidden: isHidden, filterable: { multi: true, search: true }, width: "6%", },
+                        { field: "CalYear", title: "Year", filterable: { multi: true, search: true }, width: "5%", },
+                        { field: "CalMonth2", title: "Month", format: "{0: MMM-yyyy}", template: '<label class="calMonth">#=CalMonth#</label>', filterable: { multi: true, search: true }, width: "5%", },
+                        { field: "ACT", title: "ACT", filterable: { multi: true, search: true }, width: "7%", attributes: { style: "text-align:right" }, format: "{0:N2}" },
+                        { field: "BGT", title: "BGT",  filterable: { multi: true, search: true }, width: "7%", attributes: { style: "text-align:right" }, format: "{0:N2}" },                     
+                        { field: "RF1", title: "RF1",  filterable: { multi: true, search: true }, width: "7%", attributes: { style: "text-align:right" }, format: "{0:N2}" },
+                        { field: "RF2", title: "RF2",  filterable: { multi: true, search: true }, width: "7%", attributes: { style: "text-align:right" }, format: "{0:N2}" },
+                        { field: "RF3", title: "RF3", filterable: { multi: true, search: true }, width: "7%", attributes: { style: "text-align:right" }, format: "{0:N2}" },
+                        { field: "SetId", title: "SetId", hidden: true, filterable: { multi: true, search: true }, width: "6%", },
+                    ],
+                    editable: { mode: "incell", confirmation: false, destroy: false },
+                    edit: function (e) {
+                        var models = e.model;
+                        var finYear = models.FinYear;
+                        var calMonth = models.CalMonth;
+                        var calYear = models.CalYear;
+                        var columnIndex = this.cellIndex(e.container);
+                        var model = this.thead.find("th").eq(columnIndex).data("field");
+
+                        $.ajax({
+                            async: false,
+                            url: "Shipmanagement/IsEditable",
+                            type: 'POST',
+                            data: {
+                                model: model,
+                                finYear: finYear,
+                                calMonth: calMonth,
+                                calYear: calYear
+                            },
+                            success: function (data) {
+                                result = data;
+
+                                if (result == "False") {
+                                    var grid = $("#grid2").data("kendoGrid");
+                                    grid.editCell($("#grid2 td:eq(0)"));
+                                }
+                            },
+                            error: function (xhr, status) {
+                                alert(status);
+                            }
+                        });
+
+
+                    }
+                 });
+
+                $("#myModalEdit").modal("show");
+            },
+            error: function (xhr, status) {
+                alert(status);
+            }
+
+        });
+    }
+
+    
+    function isEdit(model) {
+        var result = "";
+        var finYear = $("#lblFinYear").val();
+        var calMonth = $("#lblCalMonth").val();
+        var calYear = $("#lblCalYear").val();
+
+        $.ajax({
+            async: false,
+            url: "Shipmanagement/IsEditable",
+            type: 'POST',
+            data: {
+                model: model,
+                finYear: finYear,
+                calMonth: calMonth,
+                calYear: calYear
+            },
+            success: function (data) {
+                result = data;
+            },
+            error: function (xhr, status) {
+                alert(status);
+            }
+        });
+
+        return result;
+    }
+
+    function isEditable(e) {
+     //   var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('');
+        return isEditable == "True";
+    }
+
+    function isBGTEditable(e) {
+      //  var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('BGT');
+        return isEditable == "True";
+    }
+
+    function isACTEditable(e) {
+     //   var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('ACT');
+        return isEditable == "True";
+    }
+
+    function isRF1Editable(e) {
+     //   var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('RF1');
+        return isEditable == "True";
+    }
+
+    function isRF2Editable(e) {
+    //    var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('RF2');
+        return isEditable == "True";
+    }
+
+    function isRF3Editable(e) {
+    //    var dataSource = $("#grid").data("kendoGrid").dataSource;
+        var isEditable = isEdit('RF3');
+        return isEditable == "True";
+    }
+
+    function create() {
+        $('#KPI1').prop("selectedIndex", 0);
+        $("input:text").val('');
+        $('#KPI2').prop("selectedIndex", 0);
+        $('#Model').prop("selectedIndex", 0);
+        $('#From').prop("selectedIndex", 0);
+        $("#To").prop("selectedIndex", 0);
+        $("#CalYear").val('');
+        $('#btnSubmit').prop('disabled', true);
+        $("#myModalCreate").modal("show");
+        $("#calYear").hide();
+        $("#kpi1").hide();
+        $("#kpi2").hide();
+        $("#kpi3").hide();
+        //$("#kpi4").hide();
+    }
+
+    function saveChanges() {
+        var recs = new Array();
+        $("#grid2 table tbody tr").each(function () {
+            var row = $(this);
+            var rec = {};
+            rec.LOB = row.find("td").eq(0).html();
+            rec.KPI1 = row.find("td").eq(1).html();
+            rec.KPI2 = row.find("td").eq(2).html();
+            //rec.KPI3 = row.find("td").eq(3).html();
+            //rec.KPI4 = row.find("td").eq(3).html();
+            rec.CalYear = row.find("td").eq(3).html();
+            rec.CalMonth = row.find("td").eq(4).text();
+            rec.BU = "Shipmanagement";
+
+            rec.ACT = row.find("td").eq(5).html();
+            if (rec.ACT.indexOf("span") >= 0) {
+                rec.ACT = parseFloat(rec.ACT.split('</span>')[1].replace(/,/g, '')).toFixed(2);
+            }
+            else {
+                rec.ACT = parseFloat(rec.ACT.replace(/,/g, '')).toFixed(2);
+            }
+
+            rec.BGT = row.find("td").eq(6).html();
+            if (rec.BGT.indexOf("span") >= 0) {
+                rec.BGT = parseFloat(rec.BGT.split('</span>')[1].replace(/,/g, '')).toFixed(2);
+            }
+            else {
+                rec.BGT = parseFloat(rec.BGT.replace(/,/g, '')).toFixed(2);
+            }
+
+            rec.RF1 = row.find("td").eq(7).html();
+            if (rec.RF1.indexOf("span") >= 0) {
+                rec.RF1 = parseFloat(rec.RF1.split('</span>')[1].replace(/,/g, '')).toFixed(2);
+            }
+            else {
+                rec.RF1 = parseFloat(rec.RF1.replace(/,/g, '')).toFixed(2);
+            }
+
+            rec.RF2 = row.find("td").eq(8).html();
+            if (rec.RF2.indexOf("span") >= 0) {
+                rec.RF2 = parseFloat(rec.RF2.split('</span>')[1].replace(/,/g, '')).toFixed(2);
+            }
+            else {
+                rec.RF2 = parseFloat(rec.RF2.replace(/,/g, '')).toFixed(2);
+            }
+
+            rec.RF3 = row.find("td").eq(9).html();
+            if (rec.RF3.indexOf("span") >= 0) {
+                rec.RF3 = parseFloat(rec.RF3.split('</span>')[1].replace(/,/g, '')).toFixed(2);
+            }
+            else {
+                rec.RF3 = parseFloat(rec.RF3.replace(/,/g, '')).toFixed(2);
+            }
+
+            rec.SetId = row.find("td").eq(10).text();
+            recs.push(rec);
+        });
+
+        //Send the JSON array to Controller using AJAX.
+        $.ajax({
+            type: "POST",
+            url: "Shipmanagement/SaveChanges",
+            data: JSON.stringify(recs),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            async: false,
+            success: function (r) {
+                if (r == "Success") {
+                    $("#myModalEdit").modal("hide");
+                    location.reload();
+                }
+            }
+        });
+    }
+
+    //function editByCustomer() {
+    //    $('#KPI1e').prop("selectedIndex", 0);
+    //    $("input:text").val('');
+    //    $('#KPI2e').prop("selectedIndex", 0);
+    //    $('#KPI3e').prop("selectedIndex", 0);
+    //    $('#KPI4e').prop("selectedIndex", 0);
+    //    $('#Model').prop("selectedIndex", 0);
+    //    $("#tblResult tr").remove();
+    //    $("#myModalEdit").modal("show");
+    //}
+</script>
+
+

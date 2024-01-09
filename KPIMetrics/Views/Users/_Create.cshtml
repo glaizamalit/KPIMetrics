@@ -1,0 +1,205 @@
+﻿
+@model KPIMetrics.Models.UserInfo
+
+@{
+    ViewBag.Title = "Add User";
+}
+
+<style type="text/css">
+
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .monthHeader {
+        background-color: cornflowerblue;
+        text-align: center;
+    }
+
+    td.monthChkbx {
+        text-align: center;
+    }
+
+    input.monthChkbx {
+        height: 20px;
+        width: 20px;
+    }
+</style>
+
+<style>
+</style>
+<center>   
+    <h5 style="width:80%;">Add User</h5>
+
+    @using (Html.BeginForm("Add", "Users", FormMethod.Post, htmlAttributes: new { id = "frm_users_create" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+
+            <div>@Html.ValidationSummary(true, "", new { @class = "text-danger" })</div>
+            <table id="tblCreate" class="table table-condensed table-hover">
+
+                <tr>
+                    <td style="width: 50%">
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.Initial, "Initial", htmlAttributes: new { @class = "control-label col-md-10" })
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.Initial, new { htmlAttributes = new { @class = "form-control", @style = "width: 550px! important; float:right;", @value = " " } })
+                        <br><br><span id="initial" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                        <br /><span id="initial2" style="float: right; display:none; color:red; font-size: 13px;">This is already existing.</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.FullName, "Name", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", @style = "width: 550px! important; float:right;", @value = " " } })
+                        <br><br><span id="fullname" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr >
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.BU, "Business Function", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.DropDownListFor(model => model.BU, Model.BUList, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                        <br><br><span id="role" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+
+                    </td>
+                </tr>               
+            </table>
+        </div>
+        <button id="btnSubmit" class="btn btn-success" style="float:right;">Submit</button>
+    }
+
+    <a href="javascript:void(0)" class="btn btn-danger" style="float:right; margin-right:10px;" onclick="closeCreate();">Close</a>
+</center>
+<br />
+<br />
+<br />
+
+
+<script>
+    $(document).ready(function () {
+        $("#btnDD").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        $('#btnSubmit').prop('disabled', true);
+
+        var check1 = 0, check2 = 0; check3 = 0;
+                
+        $("#Initial").focusout(function (e) {
+            var text = $(this).val().trim();
+            check1 = text.length;
+            if (text == "") {
+                $("#initial").css("display", "");
+                check1 = 0;
+            }
+            else {
+                $("#initial").css("display", "none");
+                $.ajax({
+                    async: false,
+                    url: "CheckInitial",
+                    type: 'POST',
+                    data: {
+                        initial: text
+                    },
+                    success: function (data) {
+                        if (data == false) {
+                            $("#initial2").css("display", "");
+                            check1 = 0;
+                        }
+                        else {
+                            $("#initial2").css("display", "none");
+                        }
+                    },
+                    error: function (xhr, status) {
+                        alert(status);
+                    }
+                });
+
+                if (check1 <= 0 || check2 <= 0 || check3 <= 0) {
+                    $('#btnSubmit').prop('disabled', true);
+                }
+                else {
+                    $('#btnSubmit').prop('disabled', false);
+                }
+            }           
+        });
+
+        $("#FullName").focusout(function (e) {
+            var text = $(this).val().trim();
+            check2 = text.length;
+            if (check2 <= 0) {
+                $("#fullname").css("display", "");
+            }
+            else {
+                $("#fullname").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+        $("#Role").focusout(function (e) {
+            var text = $(this).val().trim();
+            check3 = text.length;
+            if (check3 <= 0) {
+                $("#role").css("display", "");
+            }
+            else {
+                $("#role").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });     
+    });
+
+    function closeCreate() {
+        $("#myModalCreate").modal("hide");
+    }
+</script>
+
+

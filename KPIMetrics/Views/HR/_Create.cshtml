@@ -1,0 +1,209 @@
+﻿@model KPIMetrics.Models.StaffClass
+
+@{
+    ViewBag.Title = "Vacancy Create/Delete";
+}
+
+<style type="text/css">
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .monthHeader {
+        background-color: cornflowerblue;
+        text-align: center;
+    }
+
+    td.monthChkbx {
+        text-align: center;
+    }
+
+    input.monthChkbx {
+        height: 20px;
+        width: 20px;
+    }
+</style>
+
+<style>
+</style>
+<center>
+    <h5 style="width:80%;">Add Staff</h5>
+    @using (Html.BeginForm("VacancyAdd", "HR", FormMethod.Post, htmlAttributes: new { id = "frm_hr_create" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+
+            <div>@Html.ValidationSummary(true, "", new { @class = "text-danger" })</div>
+            <table id="tblCreate" class="table table-condensed table-hover">
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.emp_no, "Employee No.", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.emp_no, new { htmlAttributes = new { @class = "form-control" , @style = "width: 550px! important; float:right;" }})
+                        <br><br><span id="empNo" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.Title, "Title", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", @style = "width: 550px! important; float:right;" } })
+                        <br><br><span id="staffType" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.Dept_Desc, "Dept_Desc", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.Dept_Desc, new { htmlAttributes = new { @class = "form-control", @style = "width: 550px! important; float:right;" } })
+                        <br><br><span id="staffType" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.Division, "Division", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.EditorFor(model => model.Division, new { htmlAttributes = new { @class = "form-control", @style = "width: 550px! important; float:right;" } })
+                        <br><br><span id="staffType" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <button id="btnSubmit" class="btn btn-success" style="float:right;">Submit</button>
+    }
+
+
+    <a href="javascript:void(0)" class="btn btn-danger" style="float:right; margin-right:10px;" onclick="closeCreate();">Close</a>
+</center>
+<br />
+<br />
+<br />
+
+
+<script>
+    $(document).ready(function () {
+        $("#btnDD").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        $('#btnSubmit').prop('disabled', true);
+
+        var check1 = 0, check2 = 0; check3 = 0; check4 = 1; check5 = 0; check6 = 0; check7 = 0; check8 = 0;
+       
+        $("#emp_no").focusout(function (e) {
+            var text = $(this).val().trim();
+            check1 = text.length;
+            if (text == "") {
+                $("#empNo").css("display", "");
+            }
+            else {
+                $("#empNo").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+      
+        $("#Title").focusout(function (e) {
+            var text = $(this).val().trim();
+            check2 = text.length;
+            if (text == "") {
+                $("#title").css("display", "");
+            }
+            else {
+                $("#title").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });      
+
+        $("#Dept_Desc").focusout(function (e) {
+            var text = $(this).val().trim();
+            check3 = text.length;
+            if (text == "") {
+                $("#bu").css("display", "");
+            }
+            else {
+                $("#bu").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+      
+        $("#Division").focusout(function (e) {
+            var text = $(this).val().trim();
+            check4 = text.length;
+            if (text == "") {
+                $("#func").css("display", "");
+            }
+            else {
+                $("#func").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });            
+    });
+
+    function closeCreate() {
+        $("#myModalCreate").modal("hide");
+    }
+</script>
+
+

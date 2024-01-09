@@ -1,0 +1,607 @@
+﻿@model KPIMetrics.Models.StaffClass
+@{
+    ViewBag.Title = "Index";
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+<style type="text/css">
+    .fontlabel {
+        color: #4a729f;
+        font-weight: 1000;
+    }
+
+    .modal {
+        align-content: center;
+        vertical-align: middle;
+        height: 100%;
+        /*float: left;*/
+        width: 100% !important;
+       /* left: 20%;
+        top: 20%;
+        transform: translate(-20%, -20%);*/
+    }
+
+    #myModalContent2 {
+        width: 2000px !important;
+        margin: auto;
+    }
+
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .k-grid-content {
+        overflow-x: scroll;
+        overflow-y: scroll;
+        max-height: 1500pxs;
+    }
+
+    th.yellowHeader {
+        background-color: yellow;
+    }
+    @@media only screen {
+        #myModalVacancy {
+           /* overflow-x: auto;*/
+            overflow-y: hidden;
+            height: 640px;
+        }
+    }
+</style>
+<div>
+    <div id="grid"></div>
+    <div id="myModalVacancy" class="modal fade in" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div id="myModalContent" class="modal-content panel-info" style="display:table; padding:20px;">
+                @Html.Partial("_Vacancy")
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="myModalCreate" class="modal fade in" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div id="myModalContent" class="modal-content panel-info" style="display:table; padding:20px;">
+            @Html.Partial("_Create")
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#loader").css("display", "");
+        $("#navHR").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        var defaultGroup = "";
+        dataSource = new kendo.data.DataSource({
+            pageSize: 100,
+            transport: {
+                read: {
+                    url: "StaffList",
+                    dataType: "json"
+                },
+                update: {
+                    url: "Update",
+                    dataType: "json",
+                    type: "POST",
+                },
+                create: {
+                    url: "Create",
+                    dataType: "json",
+                    type: "POST",
+                },
+                parameterMap: function (data, operation) {
+                    if (operation !== "read" && data.models) {
+                        return {
+                            staff: data.models[0]
+                        };
+                    }
+                }
+            },
+            batch: true,
+            error: function (e) {
+
+                var msg = e.xhr.responseText; // responseText is the custom error message which is being sent from the server side code
+
+                // Show the message to user
+                alert(msg);
+            },
+            schema: {
+                model: {
+                    id: "emp_no",
+                    fields: {
+                        Initial: { editable: false, },
+                        emp_no: { editable: false },
+                        DisplayName: { editable: false },
+                        FirstName: { editable: false },
+                        LastName: { editable: false },
+                        Title: { editable: false, },
+                        Dept_Desc: { editable: false, },
+                        Division: { editable: false, },
+                        BranchCity: { editable: false, },
+                        Country: { editable: false, },
+                        JobFamily: { editable: false, },
+                        Emp_Entity: { editable: false, },
+                        JobCode: { editable: false, },
+                        DateJoined: { editable: false, type: "datetime", parse: customParser },
+                        DateExited: { editable: false, type: "datetime", parse: customParser },
+                        PrimaryEmail: { editable: false, },
+                        StaffType: { editable: true },
+                        BU_Fin: { editable: true },
+                        Func_Fin: { editable: true },
+                        Job_Fin: { editable: true },
+                        AXcode: { editable: true },
+                        Entity_Fin: { editable: true },
+                        Division_Fin: { editable: true },
+                        //Headcount: { editable: true, type: "boolean", nullable: true },
+                        IsDefault: {editable: false},
+                        HeadcountRemarks: { editable: true, nullable: true },
+                        UpdatedBy: { editable: false },
+                        UpdatedDT: { editable: false, type: "datetime", parse: customParser },
+                        CreatedBy: { editable: false },
+                        CreatedDT: { editable: false, type: "datetime", parse: customParser },
+                        MonthYearHC1: { editable: true, },
+                        MonthYearHC2: { editable: true, },
+                        MonthYearHC3: { editable: true, },
+                        MonthYearHC4: { editable: true, },
+                        MonthYearHC5: { editable: true, },
+                        MonthYearHC6: { editable: true, },
+                        MonthYearHC7: { editable: true, },
+                        MonthYearHC8: { editable: true, },
+                        MonthYearHC9: { editable: true, },
+                        MonthYearHC10: { editable: true, },
+                        MonthYearHC11: { editable: true, },
+                        MonthYearHC12: { editable: true, },
+                        HeadcountText: {editable: true}
+                    }
+                }
+            }
+        });
+
+
+
+        function customParser(data) {
+            if (data == null) {
+                return null;
+            }
+            else {
+                return new Date(parseInt(data.substring(6))).format("dd-mmm-yyyy")
+            }
+        }
+
+        function initDropDownLists() {
+            $("#StaffType").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetStaffTypeList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#BU_Fin").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetBUList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Func_Fin").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetFunctionList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Job_Fin").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetJobList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#AXcode").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetAXCodeList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Entity_Fin").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetEntityList"
+                    }
+                },
+                filter: "contains",
+            });
+
+            $("#Division_Fin").kendoAutoComplete({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetDivisionList"
+                    }
+                },
+                filter: "contains",
+            });
+        }
+
+      /*  dataSource.group({ field: defaultGroup });*/
+         var titleMY = moment(new Date('@Session["SystemDate"].ToString()')).format("MMM") + "-" + moment(new Date('@Session["SystemDate"].ToString()')).format("YY");
+
+            if (titleMY == "@Model.MYTitle1") {
+                defaultGroup = "MonthYearHC1";
+            }
+            else if (titleMY == "@Model.MYTitle2") {
+                defaultGroup = "MonthYearHC2";
+            }
+            else if (titleMY == "@Model.MYTitle3") {
+                defaultGroup = "MonthYearHC3";
+            }
+            else if (titleMY == "@Model.MYTitle4") {
+                defaultGroup = "MonthYearHC4";
+            }
+            else if (titleMY == "@Model.MYTitle5") {
+                defaultGroup = "MonthYearHC5";
+            }
+            else if (titleMY == "@Model.MYTitle6") {
+                defaultGroup = "MonthYearHC6";
+            }
+            else if (titleMY == "@Model.MYTitle7") {
+                defaultGroup = "MonthYearHC7";
+            }
+            else if (titleMY == "@Model.MYTitle8") {
+                defaultGroup = "MonthYearHC8"
+            }
+            else if (titleMY == "@Model.MYTitle9") {
+                defaultGroup = "MonthYearHC9";
+            }
+            else if (titleMY == "@Model.MYTitle10") {
+                defaultGroup = "MonthYearHC10";
+            }
+            else if (titleMY == "@Model.MYTitle11") {
+                defaultGroup = "MonthYearHC11"
+            }
+             else {
+                defaultGroup = "MonthYearHC12";
+            }
+
+        dataSource.group({
+            field: defaultGroup,
+            aggregates: [{ field: defaultGroup, aggregate: "count" }]
+        });
+
+        var dsSort = [];
+        dsSort.push(
+            { field: "StaffType", dir: "asc" },
+            { field: "Division_Fin", dir: "asc" },
+            { field: "BU_Fin", dir: "asc" },
+            { field: "Func_Fin", dir: "asc" },
+            { field: "Job_Fin", dir: "asc" },
+            { field: "AXcode", dir: "asc" },
+            { field: "Entity_Fin", dir: "asc" },
+            { field: "DateExited", dir: "desc" },
+            { field: "Initial", dir: "asc" },
+
+        );
+        dataSource.sort(dsSort);
+
+        $("#grid").kendoGrid({
+            dataSource: dataSource,
+            columnMenu: {
+                filterable: true
+            },
+            scrollable: true,
+            editable: false,
+            sortable: true,
+            navigatable: true,
+            resizable: true,
+            reorderable: true,
+            groupable: true,
+            filterable: true,
+            pageable: {
+                pageSizes: [50, 100, 150, "all"],
+                /* numeric: false,*/
+                position: "top",
+            },
+            columnMenu: true,
+            //autobind: false,
+            //async: false,
+            toolbar: ["excel",
+                { template: '<a class="k-button" href="javascript:void(0)" onclick="vacancy()"><i style="font-size: 18px;" class="k-icon k-i-plus"></i>Vacancy</a>' },
+                { template: '<input type="checkbox" id="chkShow" onclick="showExitedDate()">Show records with Exited Date since 3 months.</input>' },
+                { template: '<a href="javascript:void(0);"><i class="k-icon k-i-info" title="Headcount KPI data are highlighted in yellow." /></a>' },
+                "search"],
+            search: {
+                fields: ["Initial", "emp_no", "DisplayName", "FirstName", "LastName", "Title", "Dept_Desc", "Division", "BranchCity", "Country", "Job_Family", "Emp_Entity", "JobCode", "DateJoined", "DateExited", "PrimaryEmail", "StaffType", "BU_Fin", "Func_Fin", "Job_Fin", "AXcode", "Entity_Fin", "Division_Fin", "UpdatedDT", "UpdatedBy", "CreatedDT", "CreatedBy"],
+            },
+            filterable: true,
+            columns: [
+                { field: "Initial", title: "Initial", filterable: { multi: true, search: true }, width: 100, locked: true },
+                { field: "emp_no", title: "Employee No.", filterable: { multi: true, search: true }, width: 100, locked: true },
+                { field: "DisplayName", title: "Display Name", filterable: { multi: true, search: true }, width: 150, locked: true },
+               // { field: "Headcount", title: "Headcount", attributes: {'style': 'background-color: yellow;'}, template: '#=showHeadcountText(data,0)#', groupHeaderTemplate: "Headcount: #= showGroupHeadcount(value) #", filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "HeadcountText", title: "Headcount", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Headcount : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "HeadcountRemarks", title: "Headcount Remarks", filterable: { multi: true, search: true }, width: 150 },
+                { field: "FirstName", title: "First Name", filterable: { multi: true, search: true }, width: 150 },
+                { field: "LastName", title: "Last Name", filterable: { multi: true, search: true }, width: 150 },
+                { field: "Title", title: "Title", filterable: { multi: true, search: true }, width: 150 },
+               // { field: "IsDefault", title: "IsDefault", filterable: { multi: true, search: true }, width: 150 },
+                { field: "Dept_Desc", title: "Department", groupHeaderTemplate: "Department : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "Division", title: "Division", groupHeaderTemplate: "Division : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "BranchCity", title: "Branch City", groupHeaderTemplate: "Branch City : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "Country", title: "Country", groupHeaderTemplate: "Country : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "JobFamily", title: "Job Family", groupHeaderTemplate: "Job Family : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "Emp_Entity", title: "Emp Entity", groupHeaderTemplate: "Emp_Entity : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "JobCode", title: "Job Code", groupHeaderTemplate: "Job Code : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "DateJoined", title: "Joined Date", groupHeaderTemplate: "Joined Date : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "DateExited", title: "Exited Date", groupHeaderTemplate: "Exited Date : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "PrimaryEmail", title: "Primary Email", filterable: { multi: true, search: true }, width: 150 },
+                { field: "StaffType", title: "Staff Type", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Staff Type : #= value # (#= count #)", aggregates: ["count"], filterable: { search: true }, width: 150 },
+                { field: "Division_Fin", title: "Division_Fin", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Division_Fin : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 170 },
+                { field: "BU_Fin", title: "BU_Fin", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "BU_Fin : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 170 },
+                { field: "Func_Fin", title: "Func_Fin", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Func_Fin : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 170 },
+                { field: "Job_Fin", title: "Job_Fin", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Job_Fin : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "AXcode", title: "AXCode", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "AXCode : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "Entity_Fin", title: "Entity_Fin", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Entity_Fin : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "LastUpdate_Fin", title: "Last Updated Date", hidden: true, attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "Last Updated Date : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150 },
+                { field: "MonthYearHC1", title: "@Model.MYTitle1", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle1 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC2", title: "@Model.MYTitle2", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle2 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC3", title: "@Model.MYTitle3", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle3 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC4", title: "@Model.MYTitle4", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle4 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC5", title: "@Model.MYTitle5", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle5 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC6", title: "@Model.MYTitle6", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle6 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC7", title: "@Model.MYTitle7", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle7 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC8", title: "@Model.MYTitle8", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle8 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC9", title: "@Model.MYTitle9", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle9 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC10", title: "@Model.MYTitle10", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle10 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC11", title: "@Model.MYTitle11", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle11 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                { field: "MonthYearHC12", title: "@Model.MYTitle12", attributes: { 'style': 'background-color: yellow;' }, groupHeaderTemplate: "@Model.MYTitle12 : #= value # (#= count #)", aggregates: ["count"], filterable: { multi: true, search: true }, width: 150, editor: statusDropDownEditor },
+                {
+                    command: [{ name: "edit" }], width: 100, locked: true
+                }
+            ],
+            editable: { mode: "inline", destroy: false },
+            beforeEdit: function (e) {
+                var data = e.model;
+            },
+            edit: function (e) {
+                initDropDownLists();
+            },
+        });
+
+         var data = [
+                { "text": "Yes", "value": true },
+                { "text": "No", "value": false },
+                { "text": "For Updating", "value": null }
+            ];
+
+        function statusDropDownEditor(container, options) {
+            $('<input name="' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                    dataTextField: "text",
+                    dataValueField: "text",
+                    //index: 0,
+                    dataSource: data
+                });
+        }
+
+
+
+        $(".k-grid").on("mousedown", ".k-grid-header th", function (e) {
+            // prevent sorting/filtering for the current Grid only
+            var grid = $(this).closest(".k-grid");
+            var editRow = grid.find(".k-grid-edit-row");
+
+            // prevent sorting/filtering while any Grid is being edited
+            //var editRow = $(".k-grid-edit-row");
+
+            if (editRow.length > 0) {
+                alert("Please complete the editing operation before sorting or filtering");
+                e.preventDefault();
+            }
+        });
+
+        $("#chkShow").prop("checked", true);
+        $(".k-grid-search").on("input", function (e) {
+            $("#chkShow").prop("checked", false);
+            $("#chkShow").attr("disabled", true);
+            let inputValueLength = e.target.value.length;
+
+            if (inputValueLength == 0) {
+                $("#chkShow").prop("checked", true);
+                $("#chkShow").removeAttr("disabled");
+                showExitedDate();
+            }
+        });
+        getExitedDate(true);
+    });
+
+    $("#grid").kendoTooltip({
+        show: function (e) {
+            if (this.content.text().length == 0) {
+                this.content.parent().css("visibility", "hidden");
+            }
+            else {
+                this.content.parent().css("visibility", "visible");
+            }
+        },
+        filter: "th",
+        content: function (e) {
+            var target = e.target;
+            return target.text();
+        },
+        width: 150
+    }).data("kendoTooltip");
+
+    //$("#grid .k-grid-content").on("change", "input.chkbx", function (e) {
+    //    var grid = $("#grid").data("kendoGrid"),
+    //        dataItem = grid.dataItem($(e.target).closest("tr"));
+    //    dataItem.set("Headcount", this.checked);
+    //});
+
+    function showGroupHeadcount(value) {
+        var headcount = '';
+        if (value == true) {
+            headcount = 'Yes';
+        }
+        else if (value == false) {
+            headcount = 'No';
+        }
+        else {
+            headcount = 'For Updating';
+        }
+        return headcount;
+    }
+
+    function showHeadcountText(value,month) {
+        var headcount = '';
+
+        switch (month) {
+            case 1:
+                value = value.MonthYearHC1;
+                break;
+            case 2:
+                value = value.MonthYearHC2;
+                break;
+            case 3:
+                value = value.MonthYearHC3;
+                break;
+            case 4:
+                value = value.MonthYearHC4;
+                break;
+            case 5:
+                value = value.MonthYearHC5;
+                break;
+            case 6:
+                value = value.MonthYearHC6;
+                break;
+            case 7:
+                value = value.MonthYearHC7;
+                break;
+            case 8:
+                value = value.MonthYearHC8;
+                break;
+            case 9:
+                value = value.MonthYearHC9;
+                break;
+            case 10:
+                value = value.MonthYearHC10;
+                break;
+            case 11:
+                value = value.MonthYearHC11;
+                break;
+            case 12:
+                value = value.MonthYearHC12;
+                break;
+            default:
+                value = value.Headcount;
+                break;
+        }
+
+        if (value == true) {
+            headcount = 'Yes';
+        }
+        else if (value == false) {
+            headcount = 'No';
+        }
+        else {
+            headcount = 'For Updating';
+        }
+        return headcount;
+    }
+
+
+    function getExitedDate(isDefault) {
+        var grid = $("#grid").data("kendoGrid");
+        grid.dataSource.filter([
+            {
+                filters: [
+                    { field: "IsDefault", value: isDefault }
+                ]
+            }
+        ]);
+    }
+
+    function showExitedDate() {
+        $("#loaderNew").css("display", "");
+        setTimeout(function () {
+
+            var grid = $("#grid").data("kendoGrid");
+
+            if ($("#chkShow").is(":checked")) {
+                getExitedDate(true);
+            }
+            else {
+                grid.dataSource.filter({});
+            }
+            grid.dataSource.read();
+            grid.setDataSource(grid.dataSource);
+            var dsSort = [];
+            dsSort.push(
+                { field: "StaffType", dir: "asc" },
+                { field: "Division_Fin", dir: "asc" },
+                { field: "BU_Fin", dir: "asc" },
+                { field: "Func_Fin", dir: "asc" },
+                { field: "Job_Fin", dir: "asc" },
+                { field: "AXcode", dir: "asc" },
+                { field: "Entity_Fin", dir: "asc" },
+                { field: "DateExited", dir: "desc" },
+                { field: "Initial", dir: "asc" },
+            );
+            dataSource.sort(dsSort);
+            $("#loaderNew").css("display", "none");
+        }, 500);
+
+        /*   $("#loader").css("display", "none");*/
+    };
+
+    function vacancy() {
+        $("input:text").val('');
+        $("#grid2").data("kendoGrid").dataSource.read();
+        $("#grid2").data("kendoGrid").refresh();
+        $('#myModalVacancy').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+        $("#myModalVacancy").modal("show");
+    }
+</script>
+
+

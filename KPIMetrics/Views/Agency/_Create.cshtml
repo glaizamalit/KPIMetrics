@@ -1,0 +1,412 @@
+﻿@model KPIMetrics.Models.KPIClass
+
+@{
+    ViewBag.Title = "Agency Create";
+}
+
+<style type="text/css">
+
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .monthHeader {
+        background-color: cornflowerblue;
+        text-align: center;
+    }
+
+    td.monthChkbx {
+        text-align: center;
+    }
+
+    input.monthChkbx {
+        height: 20px;
+        width: 20px;
+    }
+</style>
+
+<style>
+</style>
+<center>
+    @{
+        var lblHeader = "Add " + @ViewBag.KPI;
+    }
+    <h5 style="width:80%;">@lblHeader</h5>
+    @*<script id="noDataTemplate" type="text/x-kendo-tmpl">
+            <div>
+                No data found. Do do you want to do with the billing address - '#: instance.element.val() #' ?
+            </div>
+            <br />
+            <button class="k-button" onclick="addNew()">Add</button>
+        </script>*@
+
+    @using (Html.BeginForm("Add", "Agency", FormMethod.Post, htmlAttributes: new { id = "frm_agency_create" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+
+            <div>@Html.ValidationSummary(true, "", new { @class = "text-danger" })</div>
+            <table id="tblCreate" class="table table-condensed table-hover">
+                @if (ViewBag.LF == "")
+                {
+                    <tr>
+                        <td style="width: 50%">
+                            <span class="treegrid-indent"></span>
+                            <span class="treegrid-expander"></span>
+                            @Html.LabelFor(model => model.LOB, "Line Function", htmlAttributes: new { @class = "control-label col-md-10" })
+                        </td>
+
+                        <td class="text-right" style="width:50%">
+                            @Html.DropDownListFor(model => model.LOB, Model.LineFunctionList, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                            <br><br><span id="lf" style="float: right;display:none; color:red;font-size: 13px;">This field is required.</span>
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td style="width: 50%">
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.KPI1, Session["KPI1"].ToString(), htmlAttributes: new { @class = "control-label col-md-10" })
+                    </td>
+
+                    <td class="text-right" style="width:50%">
+                        @Html.DropDownListFor(model => model.KPI1, Model.KPI1List, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                        <br><br><span id="kpi1" style="float: right;display:none; color:red;font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.KPI2, Session["KPI2"].ToString(), htmlAttributes: new { @class = "control-label col-md-10" })
+                    </td>
+
+                    <td class="text-right">
+                        @Html.DropDownListFor(model => model.KPI2, Model.KPI2List, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                        <br><br><span id="kpi2" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                <tr class="trKPI3">
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        @Html.LabelFor(model => model.KPI3, Session["KPI3"].ToString(), htmlAttributes: new { @class = "control-label col-md-10" })
+
+                    </td>
+
+                    <td class="text-right">
+                        @Html.DropDownListFor(model => model.KPI3, Model.KPI3List, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                        <br><br><span id="kpi3" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+                @*<tr class="trKPI4">
+                        <td>
+                            <span class="treegrid-indent"></span>
+                            <span class="treegrid-expander"></span>
+                            @Html.LabelFor(model => model.KPI4, "Charter Type", htmlAttributes: new { @class = "control-label col-md-10" })
+
+                        </td>
+
+                        <td class="text-right">
+                            @Html.DropDownListFor(model => model.KPI4, Model.KPI4List, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                            <br><br><span id="kpi4" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+
+                        </td>
+                    </tr>*@
+                @*<tr>
+                        <td>
+                            <span class="treegrid-indent"></span>
+                            <span class="treegrid-expander"></span>
+                            @Html.LabelFor(model => model.Model, htmlAttributes: new { @class = "control-label col-md-10" })
+
+                        </td>
+
+                        <td class="text-right">
+                            @Html.DropDownListFor(model => model.Model, Model.ModelList, "-- Select --", new { @class = "form-control", @style = "width: 550px! important; float:right;" })
+                            <br><br><span id="model" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+
+                        </td>
+                    </tr>*@
+                <tr>
+                    <td>
+                        <span class="treegrid-indent"></span>
+                        <span class="treegrid-expander"></span>
+                        <label class="control-label col-md-10">Fiscal Year:</label>
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.CalYear, new { htmlAttributes = new { @id = "CalYear", @style = "width: 150px! important; float:left;" } })
+                        @Html.DropDownListFor(model => model.From, Model.MonthList, "-- Select --", new { @class = "form-control", @style = "width: 190px! important; float:left;" })
+                        <label style="text-align:center; width:10px; vertical-align: middle">to</label>
+                        @Html.DropDownListFor(model => model.To, Model.MonthList, "-- Select --", new { @class = "form-control", @style = "width: 190px! important; float:right;", @disabled = "disabled" })
+                        <br><br><span id="calYear" style="float: right; display:none; color:red; font-size: 13px;">This field is required.</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <button id="btnSubmit" class="btn btn-success" style="float:right;">Submit</button>
+    }
+
+
+    <a href="javascript:void(0)" class="btn btn-danger" style="float:right; margin-right:10px;" onclick="closeCreate();">Close</a>
+</center>
+<br />
+<br />
+<br />
+
+
+<script>
+    $(document).ready(function () {
+        $("#btnDD").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        $('#btnSubmit').prop('disabled', true);
+        /*$("#Currency2").val("USD");*/
+        //$("#Currency2").html("USD");
+
+        var check1 = 0, check2 = 0; check3 = 0; check4 = 1; check5 = 0; check6 = 0; check7 = 0; check8 = 0;
+
+        if ("@ViewBag.KPI" != "Cargolux") {
+            $(".trKPI3").show();
+          /*  $(".trKPI4").show();*/
+        }
+        else {
+            $(".trKPI3").hide();
+            //$(".trKPI4").hide();
+            check3 = 1;
+            check8 = 1;
+        }
+
+        dataSource2 = new kendo.data.DataSource({
+            transport: {
+                read: {
+                    url: 'Agency/CustomerList',
+                    dataType: "json",
+                    type: "POST"
+                },
+            },
+        });
+
+
+        //create AutoComplete UI component
+        //$("#KPI2").kendoAutoComplete({
+        //    //dataTextField: "KPI2",
+        //    //dataValueField: "KPI2",
+        //    dataSource: dataSource2,
+        //    filter: "contains",
+        //    placeholder: "Select customer name...",
+        //  /*  noDataTemplate: $("#noDataTemplate").html(),*/
+        //    //select: function (e) {
+        //    //    var dataItem = this.dataItem(e.item.index());
+        //    //    if ($("KPI2").text == "") {
+        //    //        $('#btnSubmit').prop('disabled', true);
+        //    //        $("#KPI2").val('');
+        //    //    }
+        //    //    else {
+        //    //        $('#btnSubmit').prop('disabled', false);
+        //    //        $("#KPI2").val(dataItem.Id);
+        //    //    }
+        //    //}
+        //});
+
+        $("#CalYear").kendoDatePicker({
+            start: "decade",
+            depth: "decade",
+            format: "yyyy",
+            componentType: "modern"
+        });
+        $("#CalYear").attr("readonly", true);
+
+        $('#From').on('change', function () {
+            var monthNo = $(this).val();
+            for (let i = 1; i <= 12; i++) {
+                $('#To option[value="' + i + '"]').prop('disabled', false);
+            }
+
+            if ($(this).val() != "") {
+                for (let i = 1; i <= monthNo-1; i++) {
+                    $('#To option[value="' + i + '"]').prop('disabled', true);
+                }
+                $('#To').removeAttr("disabled");
+            }
+            else {
+                for (let i = 1; i <= 12; i++) {
+                    $('#To option[value="' + i + '"]').prop('disabled', false);
+                }
+                $("#To").val($("#To option:first").val());
+                $('#To').attr("disabled", "disabled");
+            }
+        });
+
+        $("#KPI1").focusout(function (e) {
+            var text = $(this).val().trim();
+            check1 = text.length;
+            if (text == "") {
+                $("#kpi1").css("display", "");
+            }
+            else {
+                $("#kpi1").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+        $("#KPI2").focusout(function (e) {
+            var text = $(this).val().trim();
+            check2 = text.length;
+            if (check2 <= 0) {
+                $("#kpi2").css("display", "");
+            }
+            else {
+                $("#kpi2").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+        $("#KPI3").focusout(function (e) {
+            var text = $(this).val().trim();
+            check3 = text.length;
+            if (check3 <= 0) {
+                $("#kpi3").css("display", "");
+            }
+            else {
+                $("#kpi3").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+        //$("#KPI4").focusout(function (e) {
+        //    var text = $(this).val().trim();
+        //    check4 = text.length;
+        //    if (text == "") {
+        //        $("#kpi4").css("display", "");
+        //    }
+        //    else {
+        //        $("#kpi4").css("display", "none");
+        //    }
+        //    if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+        //        $('#btnSubmit').prop('disabled', true);
+        //    }
+        //    else {
+        //        $('#btnSubmit').prop('disabled', false);
+        //    }
+        //});
+
+        $("#CalYear").focusout(function (e) {
+            var text = $(this).val().trim();
+            check5 = text.length;
+            if (text == "" || check6 == 0 || check7 == 0) {
+                $("#calYear").css("display", "");
+            }
+            else {
+                $("#calYear").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+
+        $("#From").focusout(function (e) {
+            var text = $(this).val().trim();
+            check6 = text.length;
+            if (text == "" || check5 == 0 || check7 == 0) {
+                $("#calYear").css("display", "");
+            }
+            else {
+                $("#calYear").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+
+        $("#To").focusout(function (e) {
+            var text = $(this).val().trim();
+            check7 = text.length;
+            if (text == "" || check5 == 0 || check6 == 0) {
+                $("#calYear").css("display", "");
+            }
+            else {
+                $("#calYear").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+        $("#LOB").focusout(function (e) {
+            var text = $(this).val().trim();
+            check8 = text.length;
+            if (text == "") {
+                $("#lf").css("display", "");
+            }
+            else {
+                $("#lf").css("display", "none");
+            }
+            if (check1 <= 0 || check2 <= 0 || check3 <= 0 || check4 <= 0 || check5 <= 0 || check6 <= 0 || check7 <= 0 || check8 <= 0) {
+                $('#btnSubmit').prop('disabled', true);
+            }
+            else {
+                $('#btnSubmit').prop('disabled', false);
+            }
+        });
+
+    });
+
+    function closeCreate() {
+        $("#myModalCreate").modal("hide");
+    }
+
+
+
+
+</script>
+
+

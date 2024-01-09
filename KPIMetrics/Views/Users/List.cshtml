@@ -1,0 +1,397 @@
+﻿@model KPIMetrics.Models.UserInfo
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style type="text/css">
+    .fontlabel {
+        color: #4a729f;
+        font-weight: 1000;
+    }
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+    /*#usersHeader {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        #usersHeader td, #usersDetail td, #usersDetail th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            padding: 8px;
+        }
+
+    #usersDetail tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #usersDetail tr:hover {
+        background-color: #ddd;
+    }
+
+    #userslDetail th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;*/
+    /*background-color: #04AA6D;*/
+    /*background-color: cornflowerblue;
+        color: white;
+    }
+
+
+    #usersHeader table {
+        border: 1px solid #CCC;
+        border-collapse: collapse;
+    }
+
+    #usersHeader td {
+        border: none;
+    }
+
+    #usersHeader td, #usersDetail td {
+        color: black;
+    }*/
+
+    .modal {
+        align-content: center;
+        vertical-align: middle;
+        height: 100%;
+        float: left;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+<div>
+    <h4>Manage Users</h4>
+    <div id="grid"></div>
+    <label id="lblInitial" hidden="hidden"></label>
+    <label id="lblName" hidden="hidden"></label>
+    <label id="lblLocation" hidden="hidden"></label>
+    <label id="lblIsActive" hidden="hidden"></label>
+    @*<div id="myModalCreate" class="modal fade in" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div id="myModalContent" class="modal-content panel-info" style="display:table; padding:20px;">
+                    @Html.Partial("_Create")
+                </div>
+            </div>
+        </div>*@
+</div>
+<script>
+    $(document).ready(function () {
+        $("#loader").css("display", "");
+        $("#navlogout").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+
+        dataSource = new kendo.data.DataSource({
+            pageSize: 100,
+            transport: {
+                read: {
+                    url: "UserList",
+                    dataType: "json"
+                },
+                update: {
+                    url: "Update",
+                    dataType: "json",
+                    type: "POST",
+                },
+                create: {
+                    url: "Create",
+                    dataType: "json",
+                    type: "POST",
+                },
+                parameterMap: function (data, operation) {
+                    if (operation !== "read" && data.models) {
+                        return {
+                            user: data.models[0]
+                        };
+                    }
+                }
+            },
+            batch: true,
+            error: function (e) {
+
+                var msg = e.xhr.responseText; // responseText is the custom error message which is being sent from the server side code
+
+                // Show the message to user
+                alert(msg);
+            },
+            schema: {
+                model: {
+                    id: "Id",
+                    fields: {
+                        Id: {
+                            editable: false,
+                        },
+                        Initial: {
+                            validation: {
+                                required: true,
+                                //Initialvalidation: function (input) {
+                                //    return checkDuplicate(input, "Initial");
+                                //}
+                            }
+                        },
+                        FullName: {
+                            editable: true,
+                            validation: {
+                                required: true,
+                                //FullNamevalidation: function (input) {
+                                //    return checkDuplicate(input, "FullName");
+                                //}
+                            }
+                        },
+                        BU: {
+                            editable: true,
+                            validation: {
+                                required: true,
+                                BUvalidation: function (input) {
+                                    return checkDuplicate(input, "BU");
+                                }
+                            }
+                        },
+                        BUId: { editable: false },
+                        LocationId: {
+                            editable: false,
+                            validation: {
+                                required: true,
+                                Locationvalidation: function (input) {
+                                    return checkDuplicate(input, "LocationId");
+                                }
+                            }
+                        },
+                        Location: {
+                            editable: true,
+                            validation: {
+                                required: true,
+                                Locationvalidation: function (input) {
+                                    return checkDuplicate(input, "Location");
+                                }
+                            }
+                        },
+                        IsActive: {
+                            editable: true, type: "boolean",
+                            //validation: {
+                            //    Initialvalidation: function (input) {
+                            //        return checkDuplicate(input, "IsActive");
+                            //    }
+                            //}
+                        },
+                        CreatedDt: { editable: false, type: "datetime", parse: customParser },
+                        CreatedBy: { editable: false },
+                        UpdatedDt: { editable: false, type: "datetime", parse: customParser },
+                        UpdatedBy: { editable: false }
+                    }
+                }
+            }
+        });
+
+        function checkDuplicate(input, fieldName) {
+            var initial = $(input).closest("tr").find("input[name='Initial']").val() == null ? $(input).closest("tr").children('td:first').text() : $(input).closest("tr").find("input[name='Initial']").val();            
+            var name = $(input).closest("tr").find("input[name='FullName']").val();
+            var location = $(input).closest("tr").find("input[name='Location']").val();
+            var isactive = $(input).closest("tr").find("input[name='IsActive']").is(':checked');
+
+            var oldinitial = $('#lblInitial').text();
+            var oldname = $('#lblName').text();
+            var oldlocation = $('#lblLocation').text();
+            var oldisactive = $('#lblIsActive').text();
+          
+           
+            $(".k-dropdown-wrap").removeClass("k-invalid");
+            $("#Initial-error").remove();
+            $("#FullName-error").remove();
+            $("#BU-error").remove();
+            $("#Location-error").remove();
+
+            var isValid = "true";
+
+            if (input.is("[name='" + fieldName + "']")) {
+                $.ajax({
+                    url: "CheckDuplication",
+                    async: false,
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        initial: initial,
+                        name: name,
+                        location: location,
+                        isactive: isactive,
+                        oldinitial: oldinitial,
+                        oldname: oldname,
+                        oldlocation: oldlocation,
+                        oldisactive: oldisactive
+                    },
+                    success: function (result) {
+                        if (result == "FALSE") {
+                            isValid = result;
+                            return false;
+                        }
+                    },
+                    error: function () {
+                        return false;
+                    }
+                });
+
+
+                if (isValid == "FALSE") {
+                    input.attr("data-" + fieldName + "validation-msg", "Entered values have a duplicate record.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+        function customParser(data) {
+            if (data == null) {
+                return null;
+            }
+            else {
+                return new Date(parseInt(data.substring(6))).format("dd-mmm-yyyy")
+            }
+        }
+
+        var dsSort = [];
+        dsSort.push(
+            { field: "Initial", dir: "asc" }
+        );
+        dataSource.sort(dsSort);
+
+        function initDropDownLists() {
+            var bu = $("#BU").kendoDropDownList({
+                //autoBind: true,
+                dataTextField: "Name",
+                dataValueField: "BUId",
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetBUList"
+                    }
+                }
+            }).data("kendoDropDownList");
+
+            var linefunction = $("#Location").kendoDropDownList({
+                // autoBind: false,
+                cascadeFrom: "BU",
+                dataTextField: "Location",
+                dataValueField: "LocationId",
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetLocationList"
+                    }
+                }
+            }).data("kendoDropDownList");
+        }
+
+        $("#grid").kendoGrid({
+            dataSource: dataSource,
+            columnMenu: {
+                filterable: true
+            },
+            editable: false,
+            sortable: true,
+            navigatable: true,
+            resizable: true,
+            reorderable: true,
+            groupable: true,
+            filterable: true,
+            pageable: true,
+            autobind: false,
+            async: false,
+            pageable: {
+                position: "top",
+            },
+            toolbar: [{ template: '<a id="btnAdd" class="k-button" href="javascript:void(0)" onclick="create()"><i style="font-size: 18px;" class="k-icon k-i-plus"></i>Add User</a>' }, "excel", "search"],
+            search: {
+                fields: ["Initials", "Name", "Role", "CreatedDT", "CreatedBy", "UpdatedDT", "UpdatedBy"]
+            },
+            filterable: true,
+            columns: [
+               // { field: "LocationId", hidden: true, title: "LocationId", filterable: { multi: true, search: true }, width: "15%" },
+                {
+                    field: "Initial", title: "Initial", filterable: { multi: true, search: true }, width: "8%",
+                    editable:
+                        function (dataItem) {
+                            return dataItem.isNew();
+                        }
+                },
+                { field: "FullName", title: "Name", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "BU", title: "Business Function", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "Location", title: "Location", filterable: { multi: true, search: true }, width: "10%" },
+                { field: "IsActive", title: "Is Active", template: '<input type="checkbox" class="chkbox" #= IsActive ? "checked=checked" : "" # disabled="disabled"></input>', filterable: { multi: true, search: true }, width: "8%" },
+                { field: "UpdatedDt", title: "Updated Date", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "UpdatedBy", title: "Updated By", filterable: { multi: true, search: true }, width: "8%" },
+                {
+                    command: [{
+                        name: "edit", title: "&nbsp;", width: "10%"
+                    }],
+                }
+            ],
+            editable: { mode: "inline", confirmation: false, destroy: false },
+            autoBind: true,
+            beforeEdit: function (e) {
+                var data = e.model;
+                $('#lblInitial').text(data.Initial);
+                $('#lblName').text(data.FullName);
+                $('#lblLocation').text(data.LocationId);
+                $('#lblIsActive').text(data.IsActive);
+            },
+            edit: function (e) {
+                initDropDownLists();
+                var model = e.model;
+                bu = model.BUId;
+                loc = model.LocationId;
+                var bf = $("#BU").data("kendoDropDownList");
+                bf.value(bu);
+                var location = $("#Location").data("kendoDropDownList");
+                location.value(loc);
+            },
+        });
+
+        //$("#loader").css("display", "none");
+    });
+
+    $("#btnAdd").click(function () {
+        // var url = "/registry/create";
+        // window.location.href = url;
+        var grid = $("#grid").data("kendoGrid");
+        grid.addRow();
+    })
+
+    $("#grid .k-grid-content").on("change", "input.chkbx", function (e) {
+        var grid = $("#grid").data("kendoGrid"),
+            dataItem = grid.dataItem($(e.target).closest("tr"));
+        dataItem.set("IsActive", this.checked);
+    });
+
+    $("#grid").kendoTooltip({
+        show: function (e) {
+            if (this.content.text().length == 0) {
+                this.content.parent().css("visibility", "hidden");
+            }
+            else {
+                this.content.parent().css("visibility", "visible");
+            }
+        },
+        filter: "th",
+        content: function (e) {
+            var target = e.target;
+            return target.text();
+        },
+        width: 150
+    }).data("kendoTooltip");
+
+    function create() {
+        var grid = $("#grid").data("kendoGrid");
+        grid.addRow();
+    }
+</script>
+
+
+
+

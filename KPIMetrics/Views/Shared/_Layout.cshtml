@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title - KPI Metrics</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="" crossorigin="anonymous">
+    <link href="@Url.Content("~/Content/kendo/2021.3.914/kendo.bootstrap-v4.min.css")" rel="stylesheet" type="text/css" />
+    @*<link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />*@
+    <link href="@Url.Content("~/Content/Site.css")" rel="stylesheet" type="text/css" />
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="@Url.Content("~/Scripts/kendo/2021.3.914/jquery.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2021.3.914/angular.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2021.3.914/jszip.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2021.3.914/kendo.all.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/date.format.js")"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+</head>
+<body class="k-content">
+    @* <div id="bgmodal" style="position: absolute; width: 100%; height: 100%; background-color: #ebf6ff; z-index: 999; "></div>*@
+    <div id="loaderNew" style="display:none; position: fixed; width: 100%; height: 100%; background-color: #ffffff73; z-index: 999; vertical-align:middle;">
+        <img src="../Images/loader.gif" style="position: absolute; left: 50%; top: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);">
+    </div>
+
+    <nav id="navbar-top" class="navbar navbar-expand-lg navbar-light bg-light" style="z-index: 2;">
+        <div class="container p-0 p-sm-3" style="max-width:95%;">
+            <a class="navbar-brand" href="/"><img src="~/images/Wallem_logo200x37.png" /></a>
+            <div style="text-align: left; margin: 0 0 0 250px; position: absolute " id="apptitle">
+                <h8 style="color: darkblue;"><b>KPI Metrics</b></h8>
+            </div>
+            <button id="configure" class="k-rpanel-toggle k-button k-primary btn-toggle"><span class="k-icon k-i-menu"></span></button>
+            <div id="responsive-panel" class="navbar-left">
+                <ul id="menu" class="navbar-nav mr-auto">
+                    @{ var role = Session["Role"] != null ? Session["Role"].ToString().ToUpper() : null;}
+
+                    @if (Array.IndexOf(role.Split(','), "0") > -1 || Array.IndexOf(role.Split(','), "3") > -1)
+                    {
+                        <li id="navAgency" style="width:100px">
+                            Agency
+                            <ul>
+                                <li>
+                                    <a class="dropdown-item" href="~/Agency/Cargolux" id="btnCargolux">Cargolux</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Agency/PortCall" id="btnPortCall">Port Call</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Agency/CrewChange" id="btnCrewChange">Crew Change</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+
+                    @if (Array.IndexOf(role.Split(','), "0") > -1 || Array.IndexOf(role.Split(','), "1") > -1)
+                    {
+                        <li id="navCommercial">
+                            Commercial
+                            <ul>
+                                <li>
+                                    <a class="dropdown-item" href="~/Commercial/Management" id="btnManagement">Management</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Commercial/Advisory" id="btnAdvisory">Advisory</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+
+
+                    @if (Array.IndexOf(role.Split(','), "0") > -1 || Array.IndexOf(role.Split(','), "4") > -1)
+                    {
+                        <li id="navHR">
+                            <a href="~/HR/List" id="btnHR">HR</a>
+                        </li>
+                    }
+
+                    @if (Array.IndexOf(role.Split(','), "0") > -1 || Array.IndexOf(role.Split(','), "2") > -1)
+                    {
+                        <li id="navSeaSafe">
+                            SeaSafe Services
+                            <ul>
+                                <li>
+                                    <a class="dropdown-item" href="~/Seasafe/Lifeboat" id="btnLifeboat">Lifeboat</a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+
+                    @if (Array.IndexOf(role.Split(','), "0") > -1 || Array.IndexOf(role.Split(','), "5") > -1)
+                    {
+                        <li id="navShipmanagement">
+                            <a href="~/Shipmanagement/Mgt" id="btnShipmanagement">Shipmanagement</a>
+                        </li>
+                    }
+
+                <li id="navlogout">
+                    @{ var userFullName = Session["UserFullName"] != null ? Session["UserFullName"].ToString().ToUpper() : null;}
+                    Hi  @userFullName
+                    @if (Array.IndexOf(role.Split(','), "0") > -1)
+                    {
+                        <ul>
+                            <li><a class="dropdown-item" href="~/Users/List" id="btnUsers">Manage Users</a></li>
+                            <li><a class="dropdown-item" href="~/Home/About" id="btnAbout">About</a></li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul>
+                            <li><a class="dropdown-item" href="~/Home/About" id="btnAbout">About</a></li>
+                        </ul>
+                    }
+                </li>
+                    <li style="margin-top: 7px;">
+                        <div>
+                            &nbsp;|&nbsp;
+                            <a href="/Home/Logout" style="color: #282828;" class="k-icon k-i-logout" id="LogOut" data-toggle="tooltip" title="Log Out"></a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <div class="container-fluid" style="width:95%!important;">
+            @RenderBody()
+        </div>
+    </main>
+</body>
+</html>
+
+<script>
+    function startTimer(duration, display) {
+        var timer = duration, minutes, seconds;
+        setInterval(function () {
+            minutes = parseInt(timer / 60, 10)
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                timer = duration;
+            }
+        }, 1000);
+    }
+    var timeoutHandle = null;
+    var timeOutTimer = null;
+    function timeOutSession() {
+        clearTimeout(timeoutHandle);
+        timeoutHandle = setTimeout(function () {
+
+            Swal.fire({
+                title: "Session Timeout",
+                icon: "warning",
+                html: "Your current Session is over due to inactivity. All changes that were not saved will be lost.",
+                confirmButtonText: 'Log In',
+                allowOutsideClick: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //window.location.href = "http://sso.wallem.com/logout";
+                    //setTimeout(function () {
+                        window.location.href = "/";
+                    //}, 3000);
+                }
+            });
+        }, 7200000);
+    }
+    timeOutSession();
+    var inactivityTime = function () {
+        var time;
+        window.onload = resetTimer;
+        // DOM Events
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+
+
+        function showWarning() {
+
+            Swal.fire({
+                title: "Session Timeout",
+                icon: "warning",
+                html: "Your session will expire in <span id='time'>02:00</span>.",
+                confirmButtonText: 'Close',
+                allowOutsideClick: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    timeOutSession();
+                }
+            });
+            var twoMinutes = 60 * 2,
+                display = document.querySelector('#time');
+            startTimer(twoMinutes, display);
+
+            clearTimeout(timeOutTimer);
+            timeOutTimer = setTimeout(function () {
+
+                Swal.fire({
+                    title: "Session Timeout",
+                    icon: "warning",
+                    html: "Your current Session is over due to inactivity. All changes that were not saved will be lost.",
+                    confirmButtonText: 'Log In',
+                    allowOutsideClick: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        //window.location.href = "http://sso.wallem.com/logout";
+                        //setTimeout(function () {
+                            window.location.href = "/";
+                        //}, 3000);
+                    }
+                });
+
+            }, 7200000);
+
+        }
+        function shoEndwWarning() {
+
+
+            Swal.fire({
+                title: "Session Timeout",
+                icon: "warning",
+                html: "Your current Session is over due to inactivity. All changes that were not saved will be lost.",
+                confirmButtonText: 'Log In',
+                allowOutsideClick: false,
+            }).then((result) => {              
+                if (result.isConfirmed) {
+                    //window.location.href = "http://sso.wallem.com/logout";
+                    //setTimeout(function () {
+                        window.location.href = "/";
+                    //}, 3000);
+                }
+            });
+
+        }
+
+        function resetTimer() {
+            clearTimeout(time);
+            time = setTimeout(showWarning, 7080000);
+            clearTimeout(timeoutHandle);
+            timeoutHandle = setTimeout(shoEndwWarning, 7200000);
+            clearTimeout(timeOutTimer);
+            // 1000 milliseconds = 1 second
+        }
+        document.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onmousedown = resetTimer; // touchscreen presses
+        document.ontouchstart = resetTimer;
+        document.onclick = resetTimer;     // touchpad clicks
+        document.onkeypress = resetTimer;
+        document.addEventListener('scroll', resetTimer, true); // improved; see comments
+    };
+
+    $(document).ready(function () {
+        inactivityTime();
+        $("#menu").kendoMenu();
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 40) {
+                $('#navbar-top').addClass("fixed-top");
+                // add padding top to show content behind navbar
+                $('body').css('padding-top', $('.navbar').outerHeight() + 'px');
+            } else {
+                $('#navbar-top').removeClass("fixed-top");
+                // remove padding top from body
+                $('body').css('padding-top', '0');
+            }
+        });
+
+        //$("#LogOut").click(function () {
+        //    $.ajax({
+        //        type: "POST",
+        //        url: "/Logout",
+        //        contentType: "application/json; charset=utf-8",
+        //        dataType: "json",
+        //        async: false,
+        //        success: function (r) {
+        //            if (r == "success") {
+        //                window.location.href = "http://sso.wallem.com/logout";
+        //            }
+        //        }
+        //    });
+        //})
+    });
+
+</script>

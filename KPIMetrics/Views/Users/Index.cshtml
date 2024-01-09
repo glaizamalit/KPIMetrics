@@ -1,0 +1,228 @@
+﻿@model KPIMetrics.Models.UserInfo
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style type="text/css">
+    .fontlabel {
+        color: #4a729f;
+        font-weight: 1000;
+    }
+
+    /*#usersHeader {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        #usersHeader td, #usersDetail td, #usersDetail th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            padding: 8px;
+        }
+
+    #usersDetail tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #usersDetail tr:hover {
+        background-color: #ddd;
+    }
+
+    #userslDetail th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;*/
+        /*background-color: #04AA6D;*/
+        /*background-color: cornflowerblue;
+        color: white;
+    }
+
+
+    #usersHeader table {
+        border: 1px solid #CCC;
+        border-collapse: collapse;
+    }
+
+    #usersHeader td {
+        border: none;
+    }
+
+    #usersHeader td, #usersDetail td {
+        color: black;
+    }*/
+
+    .modal {
+        align-content: center;
+        vertical-align: middle;
+        height: 100%;
+        float: left;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+<div>
+    <h4>Manage Users</h4>
+    <div id="grid"></div>
+    <div id="myModalCreate" class="modal fade in" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div id="myModalContent" class="modal-content panel-info" style="display:table; padding:20px;">
+                @Html.Partial("_Create")
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#loader").css("display", "");
+        $("#navlogout").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+        dataSource = new kendo.data.DataSource({
+            pageSize: 100,
+            transport: {
+                read: {
+                    url: "List",
+                    dataType: "json"
+                },
+                update: {
+                    url: "Update",
+                    dataType: "json",
+                    type: "POST",
+                },
+                parameterMap: function (data, operation) {
+                    if (operation !== "read" && data.models) {
+                        return {
+                            user: data.models[0]
+                        };
+                    }
+                }
+            },
+            batch: true,
+            error: function (e) {
+
+                var msg = e.xhr.responseText; // responseText is the custom error message which is being sent from the server side code
+
+                // Show the message to user
+                alert(msg);
+            },
+            schema: {
+                model: {
+                    id: "Initial",
+                    fields: {
+                        Initial: { editable: false, nullable: false },
+                        FullName: { editable: true },
+                        Role: { editable: true },
+                        CreatedDt: { editable: false, type: "datetime", parse: customParser },
+                        CreatedBy: { editable: false },
+                        UpdatedDt: { editable: false, type: "datetime", parse: customParser },
+                        UpdatedBy: { editable: false }
+                    }
+                }
+            }
+        });
+
+        function customParser(data) {
+            if (data == null) {
+                return null;
+            }
+            else {
+                return new Date(parseInt(data.substring(6))).format("dd-mmm-yyyy")
+            }
+        }
+
+        var dsSort = [];
+        dsSort.push(
+            { field: "Initial", dir: "asc" }
+        );
+        dataSource.sort(dsSort);
+
+        $("#grid").kendoGrid({
+            dataSource: dataSource,
+            columnMenu: {
+                filterable: true
+            },
+            editable: false,
+            sortable: true,
+            navigatable: true,
+            resizable: true,
+            reorderable: true,
+            groupable: true,
+            filterable: true,
+            pageable: true,
+            autobind: false,
+            async: false,
+            pageable: {
+                position: "top",
+            },
+            toolbar: [{ template: '<a class="k-button" href="javascript:void(0)" onclick="create()"><i style="font-size: 18px;" class="k-icon k-i-plus"></i>Add User</a>' }, "excel", "search"],
+            search: {
+                fields: ["Initials", "Name", "Role", "CreatedDT", "CreatedBy", "UpdatedDT", "UpdatedBy"]
+            },
+            filterable: true,
+            columns: [
+                { field: "Initial", title: "Initial", filterable: { multi: true, search: true }, width: "8%" },
+                { field: "FullName", title: "Name", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "Role", title: "Role", filterable: { multi: true, search: true }, width: "7%" },
+                { field: "CreatedDt", title: "Created Date", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "CreatedBy", title: "Created By", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "UpdatedDt", title: "Updated Date", filterable: { multi: true, search: true }, width: "15%" },
+                { field: "UpdatedBy", title: "Updated By", filterable: { multi: true, search: true }, width: "15%" },
+                {
+                    command: [{
+                        name: "edit", title: "&nbsp;", width: "10%"
+                    }],
+                }
+            ],
+            editable: { mode: "inline", confirmation: false, destroy: false }
+        });
+
+        //$("#loader").css("display", "none");
+    });
+
+    function roleDropDownEditor(container, options) {
+        $('<input required name="' + options.field + '"/>')
+            .appendTo(container)
+            .kendoDropDownList({
+                autoBind: false,
+                dataTextField: "Name",
+                dataValueField: "Id",
+                dataSource: {
+                    type: "odata",
+                    transport: {
+                        read: "Users/GetRole"
+                    }
+                }
+            });
+    }
+
+    $("#grid").kendoTooltip({
+        show: function (e) {
+            if (this.content.text().length == 0) {
+                this.content.parent().css("visibility", "hidden");
+            }
+            else {
+                this.content.parent().css("visibility", "visible");
+            }
+        },
+        filter: "th",
+        content: function (e) {
+            var target = e.target;
+            return target.text();
+        },
+        width: 150
+    }).data("kendoTooltip");
+
+    function create() {
+        $("input:text").val('');
+        $('#roleList').prop("selectedIndex", 0);
+        $("#myModalCreate").modal("show");
+        $("#initial").hide();
+        $("#name").hide();
+        $("#role").hide();
+    }
+</script>
+
+
+
+

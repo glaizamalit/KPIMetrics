@@ -1,0 +1,185 @@
+﻿@model KPIMetrics.Models.KPIClass
+
+@{
+    ViewBag.Title = "Seasafe Edit";
+}
+
+<style type="text/css">
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    th {
+        background-color: #007bff !important;
+    }
+
+    .k-grid-header .k-header > .k-link, .k-header, .k-treemap-title {
+        color: white !important;
+    }
+
+    .k-grid-header {
+        padding-right: 0px !important;
+    }
+
+    .k-grid-header {
+        padding-right: 0px !important;
+    }
+
+    .k-grid-excel, .k-grid-pdf {
+        background-color: #007bff !important;
+    }
+
+    .k-grouping-header .k-group-indicator {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    .k-grouping-row td, .k-resize-handle-inner, td.k-group-cell {
+        background-color: white !important;
+    }
+
+    .k-grid .k-grid-search {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .k-grid-content {
+        overflow-x: scroll;
+        overflow-y: auto;
+        max-width: 2000px;
+    } 
+</style>
+
+<center>
+    <h5>Edit</h5>
+    <div id="grid2"></div>
+    <br />
+    <b><span style="float:left; color:red">*** Click the cell to edit.</span></b>
+    <div>     
+        <a href="javascript:void(0)" class="btn btn-danger" style="float:right" onclick="closeEdit();">Close</a>
+    </div>
+</center>
+<br />
+<br />
+<br />
+
+
+<script>
+    $(document).ready(function () {
+        $("#btnDD").addClass("k-link k-state-selected");
+        $("#bgmodal").css("display", "none");
+
+        $("#grid2").kendoTooltip({
+            show: function (e) {
+                if (this.content.text().length == 0) {
+                    this.content.parent().css("visibility", "hidden");
+                }
+                else {
+                    this.content.parent().css("visibility", "visible");
+                }
+            },
+            filter: "th",
+            content: function (e) {
+                var target = e.target;
+                return target.text();
+            },
+            width: 150
+        }).data("kendoTooltip");
+    });
+   
+    function closeEdit() {     
+        $("#myModalEdit").modal("hide");
+    }
+
+    function searchResult() {
+        var kpi1 = $("#KPI1e option:selected").text();
+        //var kpi2 = $("#KPI2e option:selected").text();
+        //var kpi3 = $("#KPI3e").val();
+        //var kpi4 = $("#KPI4e option:selected").text();
+
+        $("#tblResult tr").remove();
+
+         $.ajax({
+             url: "Seasafe/Search",
+             async: true,
+             type: "POST",
+             data: {
+                 kpi1: kpi1,
+                 kpi2: kpi2,
+                 kpi3: kpi3,
+                 kpi4: kpi4
+             },
+             success: function (response) {
+                 //var rslt = JSON.stringify(response);
+                 //append table
+                 var tbl = '';
+                 tbl += '<table id="tblResult" style="width: 95% ">';
+                 tbl += '<thead><tr>';
+                 //tbl += '<th>Ship Type</th>';
+                 //tbl += '<th>Customer</th>';
+                 //tbl += '<th>Ship Name</th>';
+                 //tbl += '<th>Charter Type</th>';
+                 tbl += '<th>Month</th>';
+                 tbl += '<th>Year</th>';
+                 tbl += '<th>ACT</th>';
+                 tbl += '<th>BGT</th>';              
+                 tbl += '<th>RF1</th>';
+                 tbl += '<th>RF2</th>';
+                 tbl += '<th>RF3</th>';
+                 tbl += '</tr></thead><tbody>';
+
+                 $.each(response, function () {
+                     tbl += '<tr>';
+                     //tbl += '<td>' + this.KPI1 + '</td>';
+                     //tbl += '<td>' + this.KPI2 + '</td>';
+                     //tbl += '<td>' + this.KPI3 + '</td>';
+                     //tbl += '<td>' + this.KPI4 + '</td>';
+                     tbl += '<td>' + this.CalMonth + '</td>';
+                     tbl += '<td>' + this.CalYear + '</td>';
+                     tbl += '<td>' + (this.ACT == null ? "" : this.ACT) + '</td>';
+                     tbl += '<td>' + (this.BGT == null ? "" : this.BGT) + '</td>';                  
+                     tbl += '<td>' + (this.RF1 == null ? "" : this.RF1) + '</td>';
+                     tbl += '<td>' + (this.RF2 == null ? "" : this.RF2) + '</td>';
+                     tbl += '<td>' + (this.RF3 == null ? "" : this.RF3) + '</td>';
+                     tbl += '</tr>';
+                 });
+
+                 tbl += '</tbody></table>';
+
+
+                 $("#result").append(tbl);
+
+             },
+             error: function () {
+                 alert("Error");
+             }
+         });
+
+    };
+
+</script>
+
+
